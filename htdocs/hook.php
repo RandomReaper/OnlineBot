@@ -1,27 +1,21 @@
 <?php
-  require '../vendor/autoload.php';
 
-  function getGandiStatus() {
-    $client = new GuzzleHttp\Client();
-    $res = $client->get('https://status.gandi.net/api/status');
-    $gandi_status = json_decode($res->getBody(), true);
-    return $gandi_status["status"];
-  };
-  
-  function currentStatus() {
-    switch(getGandiStatus()) {
-      case "SUNNY": return "All Gandi services are operational";
-      default: return "Gandi is experiencing a bit of trouble";
-    };
-  };
-?>
-<html>
-  <head>
-    <title>Gandi Status Check</title>
-  </head>
-  <body>
-    <h1><?php echo currentStatus(); ?></h1>
-    <p><a href="http://status.gandi.net">More info</a></p>
-  </body>
-</html>
+error_reporting(E_ALL & ~E_NOTICE);
 
+// Load composer
+require(__DIR__ . '/../vendor/autoload.php');
+require_once(__DIR__ . '/../config/config.php'); 
+
+try {
+    // Create Telegram API object
+    $telegram = new Longman\TelegramBot\Telegram($bot_api_key, $bot_username);
+    
+    // Enable MySQL
+    $telegram->enableMySql($mysql_credentials);
+    
+    // Handle telegram getUpdates request
+    $telegram->handle();
+} catch (Longman\TelegramBot\Exception\TelegramException $e) {
+    // log telegram errors
+    // echo $e->getMessage();
+}

@@ -1,6 +1,5 @@
 {
-  "require": {
-    "guzzlehttp/guzzle": "~6"
-  }
+    "require": {
+        "longman/telegram-bot": "^0.49.0"
+    }
 }
-
