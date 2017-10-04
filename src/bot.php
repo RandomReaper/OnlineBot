@@ -1,15 +1,29 @@
 <?php
+
 error_reporting(E_ALL);
 
 // Load composer
 require (__DIR__ . '/../vendor/autoload.php');
 require_once (__DIR__ . '/../config/config.php');
 
+function get_db()
+{
+    global $mysql_credentials;
+    
+    $dsn     = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
+    $options = [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . 'utf8mb4'];
+    $pdo = new PDO($dsn, $mysql_credentials['user'], $mysql_credentials['password'], $options);
+    
+    return $pdo;
+}
+
+$pdo;
+
 function bot($is_hook)
 {
     global $bot_api_key;
     global $bot_username;
-    global $mysql_credentials;
+    global $pdo;
     
     try {
         // Create Telegram API object
@@ -26,8 +40,9 @@ function bot($is_hook)
         //Longman\TelegramBot\TelegramLog::initUpdateLog(__DIR__ . "/{$bot_username}_update.log");
         
         // Enable MySQL
-        $telegram->enableMySql($mysql_credentials);
-        
+        $pdo = get_db();
+        $telegram->enableExternalMySql($pdo);
+
         // Handle telegram webhook request
         if ($is_hook)
         {
