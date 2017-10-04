@@ -5,11 +5,11 @@ namespace Longman\TelegramBot\Commands\UserCommands;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 
-class ListCommand extends UserCommand
+class DebugCommand extends UserCommand
 {
-    protected $name = 'list';                      // Your command's name
-    protected $description = 'List servers'; // Your command description
-    protected $usage = '/list';                    // Usage of your command
+    protected $name = 'debug';                      // Your command's name
+    protected $description = 'debug'; // Your command description
+    protected $usage = '/debug';                    // Usage of your command
     protected $version = '1.0.0';                  // Version of your command
 
     public function execute()
@@ -23,12 +23,14 @@ class ListCommand extends UserCommand
         foreach($pdo->query('SELECT * FROM ob_servers') as $row) {
             $text .= $row['id'].' '.$row['name'] . "\n";
         }
+        foreach($pdo->query('SELECT * FROM ob_online') as $row) {
+            $text .= $row['id'].' '.$row['uid'] .' '.$row['time'] . "\n";
+        }
                 
         $data = [                                  // Set up the new message data
             'chat_id' => $chat_id,                 // Set Chat ID to send the message to
             'text'    => $text
         ];
-        
 
         return Request::sendMessage($data);        // Send message!
     }

@@ -6,6 +6,31 @@ error_reporting(E_ALL);
 require (__DIR__ . '/../vendor/autoload.php');
 require_once (__DIR__ . '/../config/config.php');
 
+function online($uid, $name)
+{
+    $pdo = get_db();
+    
+    $sql = "INSERT INTO `ob_online` (`uid`, `time`) VALUES (:uid, :time)";
+        
+    //Prepare our statement.
+    $statement = $pdo->prepare($sql);
+    
+    
+    //Bind our values to our parameters (we called them :make and :model).
+    $statement->bindValue(':uid', $uid);
+    $statement->bindValue(':time', time());
+    
+    
+    //Execute the statement and insert our values.
+    $inserted = $statement->execute();
+    
+    //Because PDOStatement::execute returns a TRUE or FALSE value,
+    //we can easily check to see if our insert was successful.
+    if (!$inserted){
+        return $inserted;
+    }
+}
+
 function get_db()
 {
     global $mysql_credentials;

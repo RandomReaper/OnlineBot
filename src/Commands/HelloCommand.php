@@ -7,8 +7,8 @@ use Longman\TelegramBot\Request;
 
 class HelloCommand extends UserCommand
 {
-    protected $name = 'hello';                      // Your command's name
-    protected $description = 'A command for test'; // Your command description
+    protected $name = 'help';                      // Your command's name
+    protected $description = 'help'; // Your command description
     protected $usage = '/hello';                    // Usage of your command
     protected $version = '1.0.0';                  // Version of your command
 
@@ -18,7 +18,7 @@ class HelloCommand extends UserCommand
 
         $chat_id = $message->getChat()->getId();   // Get the current Chat ID
 
-        $data = [                                  // Set up the new message data
+           $data = [                                  // Set up the new message data
             'chat_id' => $chat_id,                 // Set Chat ID to send the message to
             'text'    => 'Hello ', // Set message to send
         ];
