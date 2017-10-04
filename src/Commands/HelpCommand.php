@@ -41,7 +41,7 @@ class HelpCommand extends UserCommand
             
             $debug_info[] = "Here is the command list:";
             
-            foreach($commands as $key=>$value)
+            foreach($commands as $text=>$value)
             {
                 $debug_info[] = "`/$text` : $value";
             }
