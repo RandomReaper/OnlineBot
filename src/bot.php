@@ -68,6 +68,8 @@ $pdo;
 
 function telegram()
 {
+    global $pdo;
+    
     global $bot_api_key;
     global $bot_username;
     
@@ -89,19 +91,13 @@ function telegram()
 }
 
 function bot($is_hook)
-{
-    global $pdo;
-    
+{   
     try {
         // Create Telegram API object
         $telegram = telegram();
         
         $telegram->enableAdmin("28932656");
-        
-
-        
-
-        
+       
         // Handle telegram webhook request
         if ($is_hook) {
             $server_response = $telegram->handle();
