@@ -20,16 +20,26 @@ function online($uid, $name)
     
     if ($statement->rowCount() == 0)
     {
+        $text = "found a new server : $uid";
+        if (name != '')
+        {
+            $text .= " (*$name*)";
+        }
+        else
+        {
+            $text .= " (*unnamed*)";
+        }
         
         Longman\TelegramBot\Request::sendToActiveChats('sendMessage', // Callback function to execute (see Request.php methods)
         [
-            'text' => "found a new server : $uid"
+            'text' => $text
         ],
         [
             'groups' => true,
             'supergroups' => true,
             'channels' => false,
-            'users' => true
+            'users' => true,
+            'parse_mode' => 'Markdown'
         ]);
         
         $past = 0;
@@ -54,14 +64,16 @@ function online($uid, $name)
         $statement->bindValue(':past', $past);
         $inserted = $statement->execute();
     }
-    
-   
 
-  
     // Because PDOStatement::execute returns a TRUE or FALSE value,
     // we can easily check to see if our insert was successful.
     if (! $inserted) {
         return $inserted;
+    }
+    
+    if ($name != '')
+    {
+        
     }
     
 }
@@ -87,6 +99,52 @@ function udpate_db()
         }
     }
 }
+
+function id_server($uid)
+{
+    $pdo = get_db();
+    
+    $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
+    $statement = $pdo->prepare($sql);
+    $statement->bindValue(':uid', $uid);
+    $statement->execute();
+    $row = $statement->fetch();
+    
+    if ($statement->rowCount() == 0)
+    {
+        return false;
+    }
+    
+    return $row['id'];
+}
+
+function register($id_user, $id_server)
+{
+    $pdo = get_db();
+    
+    $sql = "SELECT * FROM `ob_servers_users` where id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
+    $statement = $pdo->prepare($sql);
+    $statement->bindValue(':id_user', $id_user);
+    $statement->bindValue(':id_server', $id_server);
+    $statement->execute();
+    $row = $statement->fetch();
+    
+    if ($statement->rowCount() != 0)
+    {
+        return true;
+    }
+    else
+    {
+        $sql = "INSERT INTO `ob_servers_users` (`id_user`, `id_server`) VALUES (:id_user, :id_server)";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':id_user', $id_user);
+        $statement->bindValue(':id_server', $id_server);
+        
+        // Execute the statement and insert our values.
+        return $statement->execute();
+    }
+}
+
 
 function get_db()
 {

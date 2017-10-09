@@ -20,6 +20,7 @@ class HelpCommand extends UserCommand
         $commands = array(
             "help" => "this message",
             "debug" => "will show debug info",
+            "register uid" => "register one server",
         );
         
         $message = $this->getMessage();

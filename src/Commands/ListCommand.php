@@ -18,18 +18,33 @@ class ListCommand extends UserCommand
         $message = $this->getMessage();            // Get Message object
 
         $chat_id = $message->getChat()->getId();   // Get the current Chat ID
-
-        $text = "";
-        foreach($pdo->query('SELECT * FROM ob_servers') as $row) {
-            $text .= $row['id'].' '.$row['name'] . "\n";
-        }
-                
-        $data = [                                  // Set up the new message data
-            'chat_id' => $chat_id,                 // Set Chat ID to send the message to
-            'text'    => $text
-        ];
+        $id_user = $message->getFrom()->getId();
         
-
-        return Request::sendMessage($data);        // Send message!
+        $text = [];
+        $sql = "SELECT * FROM ob_online LEFT JOIN ob_servers_users ON ob_servers_users.id_server = ob_online.id WHERE ob_servers_users.id_user = :id_user";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':id_user', $id_user);
+        $statement->execute();
+        
+        if ($statement->rowCount() == 0)
+        {
+            $text[] = "no registration";
+        }
+        else
+        {
+            while ($row = $statement->fetch())
+            {
+                $duration = $row['now'] - $row['past'];
+                $last = time() - $row['now'];
+                $uid = $row['uid'];
+                $text[] = "Server *$uid* update interval : $duration seconds, age : $last";
+            }
+        }
+   
+        return Request::sendMessage([
+            'chat_id' => $chat_id,
+            'text' => implode(PHP_EOL, $text),
+            'parse_mode' => 'Markdown'
+        ]);
     }
 }

@@ -24,7 +24,8 @@ class DebugCommand extends UserCommand
             $text .= $row['id'].' '.$row['name'] . "\n";
         }
         foreach($pdo->query('SELECT * FROM ob_online') as $row) {
-            $text .= $row['id'].' '.$row['uid'] .' '.$row['time'] . "\n";
+            $duration = $row['now'] - $row['past'];
+            $text .= $row['id'].' '.$row['uid'] .' '.$duration . "seconds\n";
         }
                 
         $data = [                                  // Set up the new message data
