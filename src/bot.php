@@ -9,46 +9,83 @@ function online($uid, $name)
 {
     $pdo = get_db();
     
-    $sql = "INSERT INTO `ob_online` (`uid`, `time`) VALUES (:uid, :time)";
-    $statement = $pdo->prepare($sql);
-    $statement->bindValue(':uid', $uid);
-    $statement->bindValue(':time', time());
-    
-    // Execute the statement and insert our values.
-    $inserted = $statement->execute();
-    
-    // Because PDOStatement::execute returns a TRUE or FALSE value,
-    // we can easily check to see if our insert was successful.
-    if (! $inserted) {
-        return $inserted;
-    }
-    
-    $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 2";
+    $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
     $statement = $pdo->prepare($sql);
     $statement->bindValue(':uid', $uid);
     $statement->execute();
-    $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $row = $statement->fetch();
     
     $telegram = telegram();
+    $inserted = false;
     
-    if ($statement->rowCount() == 1) {
+    if ($statement->rowCount() == 0)
+    {
         
         Longman\TelegramBot\Request::sendToActiveChats('sendMessage', // Callback function to execute (see Request.php methods)
         [
             'text' => "found a new server : $uid"
-        ], // Param to evaluate the request
+        ],
         [
             'groups' => true,
             'supergroups' => true,
             'channels' => false,
             'users' => true
         ]);
+        
+        $past = 0;
+        $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`) VALUES (:uid, :now, :past)";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':uid', $uid);
+        $statement->bindValue(':now', time());
+        $statement->bindValue(':past', $past);
+        
+        // Execute the statement and insert our values.
+        $inserted = $statement->execute();
     }
+    else
+    {
+        $id = $row['id'];
+        $past = $row['now'];
+        
+        $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past WHERE `id` = :id";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':id', $id);
+        $statement->bindValue(':now', time());
+        $statement->bindValue(':past', $past);
+        $inserted = $statement->execute();
+    }
+    
+   
+
+  
+    // Because PDOStatement::execute returns a TRUE or FALSE value,
+    // we can easily check to see if our insert was successful.
+    if (! $inserted) {
+        return $inserted;
+    }
+    
 }
 
 function udpate_db()
 {
-    
+    $pdo = get_db();
+    $sql = "SELECT uid FROM `ob_online` group by uid";
+    $statement = $pdo->prepare($sql);
+    $statement->execute();
+    while ($row = $statement->fetch())
+    {
+        $uid = $row['uid'];
+        $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 2";
+        $s = $pdo->prepare($sql);
+        $s->bindValue(':uid', $uid);
+        $s->execute();
+        $rows = $s->fetchAll(PDO::FETCH_ASSOC);
+        
+        if ($s->rowCount() == 2)
+        {
+            echo "time diff for $uid is :" . ($rows[0]['time']-$rows[1]['time']);
+        }
+    }
 }
 
 function get_db()
