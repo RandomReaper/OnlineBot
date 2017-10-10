@@ -172,7 +172,6 @@ class PimOnlineBot
         {
             $id = $row['id'];
             $uid = $row['uid'];
-            $name = $row['$name'];
             $sql = "UPDATE `ob_online` SET `alarm` = :alarm WHERE `id` = :id";
             $s = $pdo->prepare($sql);
             $s->bindValue(':id', $id);
@@ -183,7 +182,8 @@ class PimOnlineBot
             while ($r = $users->fetch())
             {
                 $chat_id = $r['id_user'];
-                
+                $name = $row['$name'];
+                                
                 Longman\TelegramBot\Request::sendMessage([
                     'chat_id' => $chat_id,
                     'text'    => "*error:* Server _ $name _ (`$uid`) is *offline*",
