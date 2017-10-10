@@ -22,7 +22,7 @@ class RegisterCommand extends UserCommand
         $params = explode(" ", trim($message->getText(true)));
         $id_user = $message->getFrom()->getId();
         
-        if (count($params) != 2)
+        if (count($params) < 1)
         {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
@@ -31,7 +31,11 @@ class RegisterCommand extends UserCommand
             ]);
         }
         $uid = $params[0];
-        $name = $params[1];
+        $name = 'unnamed';
+        if (count($params) > 1)
+        {
+            $name = $params[1];
+        }
 
         $id_server = $bot->id_server($uid);
         

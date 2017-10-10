@@ -33,6 +33,12 @@ class PimOnlineBot
     private $doWithoutCron;
     
     /**
+     * Base url, used for the help
+     * @var string
+     */
+    private $base_url;
+    
+    /**
      * Init a PimOnlineBot
      */
     public function __construct($isHook)
@@ -41,13 +47,20 @@ class PimOnlineBot
         global $bot_api_key;
         global $bot_username;
         global $doWithoutCron;
+        global $base_url;
         
         $this->pdo = $this->init_db($mysql_credentials);
         $this->telegram = $this->init_telegram($this->pdo, $bot_api_key, $bot_username);
         $this->isHook = $isHook;
         $this->doWithoutCron = $doWithoutCron;
+        $this->base_url = $base_url;
     }
-
+    
+    public function base_url()
+    {
+        return $this->base_url;
+    }
+    
     public function telegram()
     {
         return $this->telegram;

@@ -43,11 +43,11 @@ class ListCommand extends UserCommand
                 $alarm = $row['alarm'];
                 if ($alarm == 0)
                 {
-                    $text[] = "Server _ $name _ (`$uid`) update interval : $duration seconds, age : $last";
+                    $text[] = "Server _ $name _ (`$uid`) is *up*. (update interval : $duration seconds, age : $last seconds).";
                 }
                 else
                 {
-                    $text[] = "Server _ $name _ (`$uid`) is *down* (last update : $last seconds ago)";
+                    $text[] = "Server _ $name _ (`$uid`) is *down* (last update : $last seconds ago).";
                 }
             }
         }
