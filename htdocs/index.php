@@ -20,14 +20,14 @@ if (isset($_SERVER["HTTP_HOST"]))
     $online = true;
 }
 
-if (isset($_POST['uid']))
+if (isset($_REQUEST['uid']))
 {
     /*
      * uid is set -> update from a server
      */
-    $bot->online($_POST['uid']);
+    $bot->online($_REQUEST['uid']);
 }
-else if (isset($_POST['cron']))
+else if (isset($_REQUEST['cron']))
 {
     /*
      * Manual update, generally from cron, but at this time can be forced
