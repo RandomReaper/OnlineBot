@@ -110,16 +110,6 @@ class PimOnlineBot
         
         if ($statement->rowCount() == 0)
         {
-            $text = "found a new server : $uid";
-            if (name != '')
-            {
-                $text .= " (*$name*)";
-            }
-            else
-            {
-                $text .= " (*unnamed*)";
-            }
-            
             $past = 0;
             $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
             $statement = $pdo->prepare($sql);
