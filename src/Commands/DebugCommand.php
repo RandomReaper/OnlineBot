@@ -14,7 +14,9 @@ class DebugCommand extends UserCommand
 
     public function execute()
     {
-        global $pdo;
+        global $bot;
+        $pdo = $bot->pdo();
+        
         $message = $this->getMessage();
 
         $chat_id = $message->getChat()->getId();

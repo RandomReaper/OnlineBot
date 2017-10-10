@@ -14,7 +14,9 @@ class ListCommand extends UserCommand
 
     public function execute()
     {
-        global $pdo;
+        global $bot;
+        $pdo = $bot->pdo();
+        
         $message = $this->getMessage();            // Get Message object
 
         $chat_id = $message->getChat()->getId();   // Get the current Chat ID
@@ -37,14 +39,15 @@ class ListCommand extends UserCommand
                 $duration = $row['now'] - $row['past'];
                 $last = time() - $row['now'];
                 $uid = $row['uid'];
+                $name = $row['name'];
                 $alarm = $row['alarm'];
                 if ($alarm == 0)
                 {
-                    $text[] = "Server `$uid` update interval : $duration seconds, age : $last";
+                    $text[] = "Server _ $name _ (`$uid`) update interval : $duration seconds, age : $last";
                 }
                 else
                 {
-                    $text[] = "Server `$uid` is *down* (last update : $last seconds ago)";
+                    $text[] = "Server _ $name _ (`$uid`) is *down* (last update : $last seconds ago)";
                 }
             }
         }

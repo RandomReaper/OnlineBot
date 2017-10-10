@@ -5,256 +5,284 @@ error_reporting(E_ALL);
 require (__DIR__ . '/../vendor/autoload.php');
 require_once (__DIR__ . '/../config/config.php');
 
-function online($uid)
+class PimOnlineBot
 {
-    $pdo = get_db();
+    /**
+     * Database pdo
+     * @var PDO
+     */
+    private $pdo;
     
-    $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
-    $statement = $pdo->prepare($sql);
-    $statement->bindValue(':uid', $uid);
-    $statement->execute();
-    $row = $statement->fetch();
+    /**
+     * total telegram interface
+     * @var Longman\TelegramBot\Telegram telegram object
+     */
+    private $telegram;
+
+    /**
+     * Should we use the telegram hook or rest api
+     * @var bool
+     */
+    private $isHook;
+
+    /**
+     * When cron is not available or too slow (hourly cron on certain host).
+     * The offline checks will be done on each access, can be CPU intensive.
+     * @var bool
+     */
+    private $doWithoutCron;
     
-    $telegram = telegram();
-    $inserted = false;
-    
-    if ($statement->rowCount() == 0)
+    /**
+     * Init a PimOnlineBot
+     */
+    public function __construct($isHook)
     {
-        $text = "found a new server : $uid";
-        if (name != '')
+        global $mysql_credentials;
+        global $bot_api_key;
+        global $bot_username;
+        global $doWithoutCron;
+        
+        $this->pdo = $this->init_db($mysql_credentials);
+        $this->telegram = $this->init_telegram($this->pdo, $bot_api_key, $bot_username);
+        $this->isHook = $isHook;
+        $this->doWithoutCron = $doWithoutCron;
+    }
+
+    public function telegram()
+    {
+        return $this->telegram;
+    }
+
+    public function pdo()
+    {
+        return $this->pdo;
+    }
+    
+    private function init_db($mysql_credentials)
+    {
+        $dsn = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
+        $options = [
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . 'utf8mb4'
+        ];
+        return new PDO($dsn, $mysql_credentials['user'], $mysql_credentials['password'], $options);
+    }
+    
+    private function init_telegram($pdo, $bot_api_key, $bot_username)
+    {          
+        $telegram = new Longman\TelegramBot\Telegram($bot_api_key, $bot_username);
+        
+        $commands_paths = [
+            __DIR__ . '/Commands'
+        ];
+        $telegram->addCommandsPaths($commands_paths);      
+        $telegram->enableExternalMySql($pdo);
+        
+        // Longman\TelegramBot\TelegramLog::initErrorLog(__DIR__ . "/{$bot_username}_error.log");
+        // Longman\TelegramBot\TelegramLog::initDebugLog(__DIR__ . "/{$bot_username}_debug.log");
+        // Longman\TelegramBot\TelegramLog::initUpdateLog(__DIR__ . "/{$bot_username}_update.log");
+        return $telegram;
+    }
+    
+    public function online($uid)
+    {
+        $pdo = $this->pdo();
+        $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':uid', $uid);
+        $statement->execute();
+        $row = $statement->fetch();
+        
+        $telegram = $this->telegram();
+        $inserted = false;
+        
+        if ($statement->rowCount() == 0)
         {
-            $text .= " (*$name*)";
+            $text = "found a new server : $uid";
+            if (name != '')
+            {
+                $text .= " (*$name*)";
+            }
+            else
+            {
+                $text .= " (*unnamed*)";
+            }
+            
+            $past = 0;
+            $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':uid', $uid);
+            $statement->bindValue(':now', time());
+            $statement->bindValue(':past', $past);
+            $statement->bindValue(':alarm', 0);
+            
+            // Execute the statement and insert our values.
+            $inserted = $statement->execute();
         }
         else
         {
-            $text .= " (*unnamed*)";
+            $id = $row['id'];
+            $past = $row['now'];
+            $alarm = $row['alarm'];
+            
+            $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':id', $id);
+            $statement->bindValue(':now', time());
+            $statement->bindValue(':past', $past);
+            $statement->bindValue(':alarm', 0);
+            $inserted = $statement->execute();
+            
+            echo "alarm=$alarm\n";
+            if ($alarm)
+            {
+                $users = $this->users($id);
+                while ($r = $users->fetch())
+                {
+                    $chat_id = $r['id_user'];
+                    $name = $r['$name'];
+                    
+                    Longman\TelegramBot\Request::sendMessage([
+                        'chat_id' => $chat_id,
+                        'text'    => "*info:* Server _ $name _ (`$uid`) is *online*",
+                        'parse_mode' => 'Markdown'
+                    ]);
+                }
+            }
         }
         
-        $past = 0;
-        $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
-        $statement = $pdo->prepare($sql);
-        $statement->bindValue(':uid', $uid);
-        $statement->bindValue(':now', time());
-        $statement->bindValue(':past', $past);
-        $statement->bindValue(':alarm', 0);
-        
-        // Execute the statement and insert our values.
-        $inserted = $statement->execute();
+        // Because PDOStatement::execute returns a TRUE or FALSE value,
+        // we can easily check to see if our insert was successful.
+        if (! $inserted) {
+            return $inserted;
+        }
     }
-    else
+    
+    public function udpate_db()
     {
-        $id = $row['id'];
-        $past = $row['now'];
-        $alarm = $row['alarm'];
-        
-        $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
+        $pdo = $this->pdo();
+        $time = time();
+        $sql = "SELECT * FROM `ob_online` WHERE alarm = 0 and (now - past) * 1.2 < (:time - now)";
         $statement = $pdo->prepare($sql);
-        $statement->bindValue(':id', $id);
-        $statement->bindValue(':now', time());
-        $statement->bindValue(':past', $past);
-        $statement->bindValue(':alarm', 0);
-        $inserted = $statement->execute();
-        
-        if ($alarm)
+        $statement->bindValue(':time', time());
+        $statement->execute();
+        while ($row = $statement->fetch())
         {
-            $users = users($id);
+            $id = $row['id'];
+            $uid = $row['uid'];
+            $name = $row['$name'];
+            $sql = "UPDATE `ob_online` SET `alarm` = :alarm WHERE `id` = :id";
+            $s = $pdo->prepare($sql);
+            $s->bindValue(':id', $id);
+            $s->bindValue(':alarm', time());
+            $s->execute();
+            
+            $users = $this->users($id);
             while ($r = $users->fetch())
             {
                 $chat_id = $r['id_user'];
+                
                 Longman\TelegramBot\Request::sendMessage([
                     'chat_id' => $chat_id,
-                    'text'    => "*info:* server '$uid' is *online*",
+                    'text'    => "*error:* Server _ $name _ (`$uid`) is *offline*",
                     'parse_mode' => 'Markdown'
                 ]);
             }
         }
     }
-
-    // Because PDOStatement::execute returns a TRUE or FALSE value,
-    // we can easily check to see if our insert was successful.
-    if (! $inserted) {
-        return $inserted;
-    }
-}
-
-function udpate_db()
-{
-    $time = time();
-    echo "update_db time : $time\n";
-    $telegram = telegram();
-    $pdo = get_db();
-    $sql = "SELECT * FROM `ob_online` WHERE alarm = 0 and (now - past) * 1.2 < (:time - now)";
-    $statement = $pdo->prepare($sql);
-    $statement->bindValue(':time', time());
-    $statement->execute();
-    while ($row = $statement->fetch())
+    
+    public function id_server($uid)
     {
-        $id = $row['id'];
-        $uid = $row['uid'];
-        $sql = "UPDATE `ob_online` SET `alarm` = :alarm WHERE `id` = :id";
-        $s = $pdo->prepare($sql);
-        $s->bindValue(':id', $id);
-        $s->bindValue(':alarm', time());
-        $s->execute();
+        $pdo = $this->pdo();
+        $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':uid', $uid);
+        $statement->execute();
+        $row = $statement->fetch();
         
-        $users = users($id);
-        while ($r = $users->fetch())
+        if ($statement->rowCount() == 0)
         {
-            $chat_id = $r['id_user'];
-
-            Longman\TelegramBot\Request::sendMessage([
-                'chat_id' => $chat_id,
-                'text'    => "*error:* server '$uid' is *offline*",
-                'parse_mode' => 'Markdown'
-            ]);
+            return false;
         }
-    }
-}
-
-function id_server($uid)
-{
-    $pdo = get_db();
-    
-    $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
-    $statement = $pdo->prepare($sql);
-    $statement->bindValue(':uid', $uid);
-    $statement->execute();
-    $row = $statement->fetch();
-    
-    if ($statement->rowCount() == 0)
-    {
-        return false;
+        
+        return $row['id'];
     }
     
-    return $row['id'];
-}
-
-function users($id_server)
-{
-    $pdo = get_db();
-    
-    $sql = "SELECT * FROM `ob_servers_users` where id_server=:id_server order by id";
-    $statement = $pdo->prepare($sql);
-    $statement->bindValue(':id_server', $id_server);
-    $statement->execute();
-    return $statement;
-}
-
-function register($id_user, $id_server)
-{
-    $pdo = get_db();
-    
-    $sql = "SELECT * FROM `ob_servers_users` where id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
-    $statement = $pdo->prepare($sql);
-    $statement->bindValue(':id_user', $id_user);
-    $statement->bindValue(':id_server', $id_server);
-    $statement->execute();
-    $row = $statement->fetch();
-    
-    if ($statement->rowCount() != 0)
+    private function users($id_server)
     {
-        return true;
+        $pdo = $this->pdo();
+        $sql = "SELECT * FROM `ob_servers_users` where id_server=:id_server order by id";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':id_server', $id_server);
+        $statement->execute();
+        return $statement;
     }
-    else
+    
+    public function register($id_user, $id_server, $name)
     {
-        $sql = "INSERT INTO `ob_servers_users` (`id_user`, `id_server`) VALUES (:id_user, :id_server)";
+        $pdo = $this->pdo();
+        $sql = "SELECT * FROM `ob_servers_users` where id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id_user', $id_user);
         $statement->bindValue(':id_server', $id_server);
+        $statement->execute();
+        $row = $statement->fetch();
         
-        // Execute the statement and insert our values.
-        return $statement->execute();
-    }
-}
-
-
-function get_db()
-{
-    global $mysql_credentials;
-    
-    $dsn = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
-    $options = [
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . 'utf8mb4'
-    ];
-    $pdo = new PDO($dsn, $mysql_credentials['user'], $mysql_credentials['password'], $options);
-    
-    return $pdo;
-}
-
-$pdo;
-
-function telegram()
-{
-    global $pdo;
-    
-    global $bot_api_key;
-    global $bot_username;
-    
-    $telegram = new Longman\TelegramBot\Telegram($bot_api_key, $bot_username);
-    
-    $commands_paths = [
-        __DIR__ . '/Commands'
-    ];
-    $telegram->addCommandsPaths($commands_paths);
-
-    // Enable MySQL
-    $pdo = get_db();
-    $telegram->enableExternalMySql($pdo);
-
-    // Longman\TelegramBot\TelegramLog::initErrorLog(__DIR__ . "/{$bot_username}_error.log");
-    // Longman\TelegramBot\TelegramLog::initDebugLog(__DIR__ . "/{$bot_username}_debug.log");
-    // Longman\TelegramBot\TelegramLog::initUpdateLog(__DIR__ . "/{$bot_username}_update.log");
-    return $telegram;
-}
-
-function bot($is_hook)
-{   
-    try {
-        // Create Telegram API object
-        $telegram = telegram();
-        
-        // Handle telegram webhook request
-        if ($is_hook) {
-            $server_response = $telegram->handle();
-        } else {
-            $server_response = $telegram->handleGetUpdates();
-            
-            if ($server_response->isOk()) {
-                $update_count = count($server_response->getResult());
-                echo date('Y-m-d H:i:s', time()) . ' - Processed ' . $update_count . ' updates' . PHP_EOL;
-            } else {
-                echo date('Y-m-d H:i:s', time()) . ' - Failed to fetch updates' . PHP_EOL;
-                echo $server_response->printError();
-            }
+        if ($statement->rowCount() != 0)
+        {
+            return true;
         }
-        /*
-         * $results = Longman\TelegramBot\Request::sendToActiveChats(
-         * 'sendMessage', // Callback function to execute (see Request.php methods)
-         * ['text' => 'Hey! Check out the new features!!'], // Param to evaluate the request
-         * [
-         * 'groups' => true,
-         * 'supergroups' => true,
-         * 'channels' => false,
-         * 'users' => true,
-         * ]
-         * );
-         */
-    } catch (Longman\TelegramBot\Exception\TelegramException $e) {
-        // Silence is golden!
-        // log telegram errors
-        echo $e->getMessage();
+        else
+        {
+            $sql = "INSERT INTO `ob_servers_users` (`id_user`, `id_server`, `name`) VALUES (:id_user, :id_server, :name)";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':id_user', $id_user);
+            $statement->bindValue(':id_server', $id_server);
+            $statement->bindValue(':name', $name);
+            
+            // Execute the statement and insert our values.
+            return $statement->execute();
+        }
+    }
+    
+    public function server_count()
+    {
+        $pdo = $this->pdo();
+        $sql = "SELECT COUNT(*) as server_count FROM `ob_online`";
+        $statement = $pdo->prepare($sql);
+        $statement->execute();
+        $row = $statement->fetch();
+        
+        return $row['server_count'];
+    }
+    
+    public function bot()
+    {
+        try {
+            $telegram = $this->telegram();
+            // Handle telegram webhook request
+            if ($this->isHook) {
+                $server_response = $telegram->handle();
+            } else {
+                $server_response = $telegram->handleGetUpdates();
+                
+                if ($server_response->isOk()) {
+                    $update_count = count($server_response->getResult());
+                    echo date('Y-m-d H:i:s', time()) . ' - Processed ' . $update_count . ' updates' . PHP_EOL;
+                } else {
+                    echo date('Y-m-d H:i:s', time()) . ' - Failed to fetch updates' . PHP_EOL;
+                    echo $server_response->printError();
+                }
+            }
+            
+        } catch (Longman\TelegramBot\Exception\TelegramException $e) {
+            // Silence is golden!
+            // log telegram errors
+            echo $e->getMessage();
+        }
+        
+        if ($this->doWithoutCron)
+        {
+            $this->udpate_db();
+        }
     }
 }
-
-function server_count()
-{
-    $pdo = get_db();
-    
-    $sql = "SELECT COUNT(*) as server_count FROM `ob_online`";
-    $statement = $pdo->prepare($sql);
-    $statement->execute();
-    $row = $statement->fetch();
-    
-    return $row['server_count'];
-}
-
