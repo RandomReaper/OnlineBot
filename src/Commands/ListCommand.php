@@ -37,7 +37,15 @@ class ListCommand extends UserCommand
                 $duration = $row['now'] - $row['past'];
                 $last = time() - $row['now'];
                 $uid = $row['uid'];
-                $text[] = "Server *$uid* update interval : $duration seconds, age : $last";
+                $alarm = $row['alarm'];
+                if ($alarm == 0)
+                {
+                    $text[] = "Server `$uid` update interval : $duration seconds, age : $last";
+                }
+                else
+                {
+                    $text[] = "Server `$uid` is *down* (last update : $last seconds ago)";
+                }
             }
         }
    

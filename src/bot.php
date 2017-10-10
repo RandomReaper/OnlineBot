@@ -43,11 +43,12 @@ function online($uid, $name)
         ]);
         
         $past = 0;
-        $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`) VALUES (:uid, :now, :past)";
+        $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':uid', $uid);
         $statement->bindValue(':now', time());
         $statement->bindValue(':past', $past);
+        $statement->bindValue(':alarm', 0);
         
         // Execute the statement and insert our values.
         $inserted = $statement->execute();
@@ -57,11 +58,12 @@ function online($uid, $name)
         $id = $row['id'];
         $past = $row['now'];
         
-        $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past WHERE `id` = :id";
+        $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id', $id);
         $statement->bindValue(':now', time());
         $statement->bindValue(':past', $past);
+        $statement->bindValue(':alarm', 0);
         $inserted = $statement->execute();
     }
 
@@ -80,22 +82,34 @@ function online($uid, $name)
 
 function udpate_db()
 {
+    $time = time();
+    echo "update_db time : $time\n";
+    $telegram = telegram();
     $pdo = get_db();
-    $sql = "SELECT uid FROM `ob_online` group by uid";
+    $sql = "SELECT * FROM `ob_online` WHERE alarm = 0 and (now - past) * 1.2 < (:time - now)";
     $statement = $pdo->prepare($sql);
+    $statement->bindValue(':time', time());
     $statement->execute();
     while ($row = $statement->fetch())
     {
+        $id = $row['id'];
         $uid = $row['uid'];
-        $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 2";
+        $sql = "UPDATE `ob_online` SET `alarm` = :alarm WHERE `id` = :id";
         $s = $pdo->prepare($sql);
-        $s->bindValue(':uid', $uid);
+        $s->bindValue(':id', $id);
+        $s->bindValue(':alarm', time());
         $s->execute();
-        $rows = $s->fetchAll(PDO::FETCH_ASSOC);
         
-        if ($s->rowCount() == 2)
+        $users = users($id);
+        while ($r = $users->fetch())
         {
-            echo "time diff for $uid is :" . ($rows[0]['time']-$rows[1]['time']);
+            $chat_id = $r['id_user'];
+            echo "alarm to $chat_id\n";
+            Longman\TelegramBot\Request::sendMessage([
+                'chat_id' => $chat_id,
+                'text'    => "*error:* server '$uid' is *offline*",
+                'parse_mode' => 'Markdown'
+            ]);
         }
     }
 }
@@ -116,6 +130,17 @@ function id_server($uid)
     }
     
     return $row['id'];
+}
+
+function users($id_server)
+{
+    $pdo = get_db();
+    
+    $sql = "SELECT * FROM `ob_servers_users` where id_server=:id_server order by id";
+    $statement = $pdo->prepare($sql);
+    $statement->bindValue(':id_server', $id_server);
+    $statement->execute();
+    return $statement;
 }
 
 function register($id_user, $id_server)
@@ -191,8 +216,6 @@ function bot($is_hook)
         // Create Telegram API object
         $telegram = telegram();
         
-        $telegram->enableAdmin("28932656");
-       
         // Handle telegram webhook request
         if ($is_hook) {
             $server_response = $telegram->handle();

@@ -7,32 +7,34 @@ use Longman\TelegramBot\Request;
 
 class DebugCommand extends UserCommand
 {
-    protected $name = 'debug';                      // Your command's name
-    protected $description = 'debug'; // Your command description
-    protected $usage = '/debug';                    // Usage of your command
-    protected $version = '1.0.0';                  // Version of your command
+    protected $name = 'debug';
+    protected $description = 'debug';
+    protected $usage = '/debug';
+    protected $version = '1.0.0';
 
     public function execute()
     {
         global $pdo;
-        $message = $this->getMessage();            // Get Message object
+        $message = $this->getMessage();
 
-        $chat_id = $message->getChat()->getId();   // Get the current Chat ID
+        $chat_id = $message->getChat()->getId();
+        $user_id = $message->getFrom()->getId();
 
-        $text = "";
+        $text = [];
+        $text[] = "user\_id = *$user_id*";
+        $text[] = "chat\_id = *$chat_id*";
         foreach($pdo->query('SELECT * FROM ob_servers') as $row) {
-            $text .= $row['id'].' '.$row['name'] . "\n";
+            $text[] = $row['id'].' '.$row['name'] . "\n";
         }
         foreach($pdo->query('SELECT * FROM ob_online') as $row) {
             $duration = $row['now'] - $row['past'];
-            $text .= $row['id'].' '.$row['uid'] .' '.$duration . "seconds\n";
+            $text[] = $row['id'].' '.$row['uid'] .' '.$duration . "seconds\n";
         }
                 
-        $data = [                                  // Set up the new message data
-            'chat_id' => $chat_id,                 // Set Chat ID to send the message to
-            'text'    => $text
-        ];
-
-        return Request::sendMessage($data);        // Send message!
+        return Request::sendMessage([
+            'chat_id' => $chat_id,
+            'text' => implode(PHP_EOL, $text),
+            'parse_mode' => 'Markdown'
+        ]);
     }
 }
