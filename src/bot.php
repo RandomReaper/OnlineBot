@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 require (__DIR__ . '/../vendor/autoload.php');
 require_once (__DIR__ . '/../config/config.php');
 
-function online($uid, $name)
+function online($uid)
 {
     $pdo = get_db();
     
@@ -30,18 +30,6 @@ function online($uid, $name)
             $text .= " (*unnamed*)";
         }
         
-        Longman\TelegramBot\Request::sendToActiveChats('sendMessage', // Callback function to execute (see Request.php methods)
-        [
-            'text' => $text
-        ],
-        [
-            'groups' => true,
-            'supergroups' => true,
-            'channels' => false,
-            'users' => true,
-            'parse_mode' => 'Markdown'
-        ]);
-        
         $past = 0;
         $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
         $statement = $pdo->prepare($sql);
@@ -57,6 +45,7 @@ function online($uid, $name)
     {
         $id = $row['id'];
         $past = $row['now'];
+        $alarm = $row['alarm'];
         
         $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
         $statement = $pdo->prepare($sql);
@@ -65,6 +54,20 @@ function online($uid, $name)
         $statement->bindValue(':past', $past);
         $statement->bindValue(':alarm', 0);
         $inserted = $statement->execute();
+        
+        if ($alarm)
+        {
+            $users = users($id);
+            while ($r = $users->fetch())
+            {
+                $chat_id = $r['id_user'];
+                Longman\TelegramBot\Request::sendMessage([
+                    'chat_id' => $chat_id,
+                    'text'    => "*info:* server '$uid' is *online*",
+                    'parse_mode' => 'Markdown'
+                ]);
+            }
+        }
     }
 
     // Because PDOStatement::execute returns a TRUE or FALSE value,
@@ -72,12 +75,6 @@ function online($uid, $name)
     if (! $inserted) {
         return $inserted;
     }
-    
-    if ($name != '')
-    {
-        
-    }
-    
 }
 
 function udpate_db()
@@ -104,7 +101,7 @@ function udpate_db()
         while ($r = $users->fetch())
         {
             $chat_id = $r['id_user'];
-            echo "alarm to $chat_id\n";
+
             Longman\TelegramBot\Request::sendMessage([
                 'chat_id' => $chat_id,
                 'text'    => "*error:* server '$uid' is *offline*",
@@ -247,5 +244,17 @@ function bot($is_hook)
         // log telegram errors
         echo $e->getMessage();
     }
+}
+
+function server_count()
+{
+    $pdo = get_db();
+    
+    $sql = "SELECT COUNT(*) as server_count FROM `ob_online`";
+    $statement = $pdo->prepare($sql);
+    $statement->execute();
+    $row = $statement->fetch();
+    
+    return $row['server_count'];
 }
 

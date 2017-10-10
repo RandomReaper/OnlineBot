@@ -9,19 +9,14 @@ if (! isset($_SERVER["HTTP_HOST"]) && $argc > 1) {
 }
 
 if (isset($_POST['uid'])) {
-    $name = '';
-    if (isset($_POST['name'])) {
-        $name = $_POST['name'];
-    }
-    
     // looks like an online server
-    $ret = online($_POST['uid'], $name);
+    $ret = online($_POST['uid']);
 } else if (isset($_POST['cron']))
 {
     udpate_db();
 }
 
-$pdo = get_db();
-foreach ($pdo->query('SELECT * FROM ob_servers') as $row) {
-    echo $row['id'] . ' ' . $row['name'] . "\n";
-}
+$server_count = server_count();
+
+echo "server_count = $server_count\n";
+
