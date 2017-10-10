@@ -1,0 +1,3 @@
+help - show the full help
+register - add one server with this uid and name
+list - list your own servers
