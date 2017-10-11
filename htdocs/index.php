@@ -5,7 +5,6 @@ require_once (__DIR__ . '/../src/bot.php');
 
 $bot = new PimOnlineBot(false);
 $online = false;
-
 /*
  * When called from the command line, emulate a HTTP GET/POST
  */
@@ -35,12 +34,6 @@ if (isset($_REQUEST['uid']))
     }
 
     $bot->online($_REQUEST['uid']);
-    
-    /*
-     * try to detect if there is some weird caching
-     */
-    $time = time();
-    echo "time=$time\n";    
 }
 else if (isset($_REQUEST['cron']))
 {
