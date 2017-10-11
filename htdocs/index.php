@@ -29,9 +29,8 @@ if (isset($_REQUEST['uid']))
     /*
      * Disable varnish cache for updates
      */
-    if (! isset($_SERVER["HTTP_HOST"]))
+    if (isset($_SERVER["HTTP_HOST"]))
     {
-        header('Pim-Custom-Header: pim');
         header('Cache-Control: max-age=0');
     }
 
