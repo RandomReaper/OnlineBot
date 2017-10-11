@@ -13,6 +13,7 @@ if (! isset($_SERVER["HTTP_HOST"]) && $argc > 1)
 {
         parse_str($argv[1], $_GET);
         parse_str($argv[1], $_POST);
+        parse_str($argv[1], $_REQUEST);
 }
 
 if (isset($_SERVER["HTTP_HOST"]))

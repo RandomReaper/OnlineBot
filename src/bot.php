@@ -142,7 +142,7 @@ class PimOnlineBot
                 while ($r = $users->fetch())
                 {
                     $chat_id = $r['id_user'];
-                    $name = $r['$name'];
+                    $name = $r['name'];
                     
                     Longman\TelegramBot\Request::sendMessage([
                         'chat_id' => $chat_id,
@@ -152,9 +152,7 @@ class PimOnlineBot
                 }
             }
         }
-        
-        // Because PDOStatement::execute returns a TRUE or FALSE value,
-        // we can easily check to see if our insert was successful.
+
         if (! $inserted) {
             return $inserted;
         }
@@ -182,7 +180,7 @@ class PimOnlineBot
             while ($r = $users->fetch())
             {
                 $chat_id = $r['id_user'];
-                $name = $row['$name'];
+                $name = $r['name'];
                                 
                 Longman\TelegramBot\Request::sendMessage([
                     'chat_id' => $chat_id,
