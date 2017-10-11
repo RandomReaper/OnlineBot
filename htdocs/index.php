@@ -31,7 +31,8 @@ if (isset($_REQUEST['uid']))
      */
     if (! isset($_SERVER["HTTP_HOST"]))
     {
-        header("Cache-Control: max-age=0");
+        header('Pim-Custom-Header: pim');
+        header('Cache-Control: max-age=0');
     }
 
     $bot->online($_REQUEST['uid']);
@@ -40,7 +41,7 @@ if (isset($_REQUEST['uid']))
      * try to detect if there is some weird caching
      */
     $time = time();
-    echo "time=$time\n";
+    echo "time=$time\n";    
 }
 else if (isset($_REQUEST['cron']))
 {
