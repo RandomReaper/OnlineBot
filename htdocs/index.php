@@ -21,11 +21,19 @@ if (isset($_SERVER["HTTP_HOST"]))
     $online = true;
 }
 
+/*
+ * uid is set -> update from a server
+ */
 if (isset($_REQUEST['uid']))
 {
     /*
-     * uid is set -> update from a server
+     * Disable varnish cache for updates
      */
+    if (! isset($_SERVER["HTTP_HOST"]))
+    {
+        header("Cache-Control: max-age=0");
+    }
+
     $bot->online($_REQUEST['uid']);
     
     /*
