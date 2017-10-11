@@ -8,7 +8,7 @@ use Longman\TelegramBot\Request;
 class RegisterCommand extends UserCommand
 {
     protected $name = 'Register';
-    protected $description = 'register server';
+    protected $description = 'register host';
     protected $usage = '/register uid name';
     protected $version = '1.0.0';
 

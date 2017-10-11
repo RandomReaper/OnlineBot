@@ -20,8 +20,8 @@ class HelpCommand extends UserCommand
         global $bot;
         $commands = array(
             "help" => "this message",
-            "list" => "will list your own servers",
-            "register uid name" => "register one server",
+            "list" => "will list your own hosts",
+            "register uid name" => "register one host",
         );
         
         $uid = \Ramsey\Uuid\Uuid::uuid4()->toString();
@@ -29,25 +29,25 @@ class HelpCommand extends UserCommand
         $base_url = $bot->base_url();
         $help_message =<<<EOT
 Hello, my name is *PimOnlineBot*.
-I can send you a message when a server is _offline_.
+I can send you a message when a host is _offline_.
 
-The server will tell _me_ it is online by doing a request at regular interval, for instance using a cron job like this one:
+The host will tell _me_ it is online by doing a request at regular interval, for instance using a cron job like this one:
 ```
 $min * * * * wget $base_url/index.php?uid=$uid -O /dev/null
 ```
 
-The server will be identified by it's _uid_. This _uid_ must be *unique*, and I just generated `$uid` for your new server, but
+The host will be identified by it's _uid_. This _uid_ must be *unique*, and I just generated `$uid` for your new host, but
 `uuidgen` (the command line) can also be used.
 
-Once your server has told _me_ that it is online, you can tell me that this server is yours, using the `/register` command.
-Since _uid_ is not really human friendly, feel free to tell _me_ your server name.
+Once your host has told _me_ that it is online, you can tell me that this host is yours, using the `/register` command.
+Since _uid_ is not really human friendly, feel free to tell _me_ your host name.
 ```
-/register $uid my-server-pretty-name
+/register $uid my-host-pretty-name
 ```
 
-You can list your own servers using the `/list` command, it should say something like:
+You can list your own hosts using the `/list` command, it should say something like:
 
-Server _ my-pretty-server-name _ (`$uid`) is *up*. Update interval : 3600 seconds, age : 150 seconds
+Host _my-pretty-host-name_ (`$uid`) is *online*. Update interval : 3600 seconds, age : 150 seconds
 
 EOT;
 
