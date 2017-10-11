@@ -135,7 +135,6 @@ class PimOnlineBot
             $statement->bindValue(':alarm', 0);
             $inserted = $statement->execute();
             
-            echo "alarm=$alarm\n";
             if ($alarm)
             {
                 $users = $this->users($id);
