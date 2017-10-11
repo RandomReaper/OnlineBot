@@ -1,0 +1,14 @@
+<?php
+
+$bot_api_key    = 'your_key';
+$bot_username   = 'OnlineBot';
+$doWithoutCron  = true;
+$base_url       = '';
+
+$mysql_credentials = [
+    'host'     => 'localhost',
+    'user'     => 'your_user',
+    'password' => 'your_pwd',
+    'database' => 'your_db',
+];
+
