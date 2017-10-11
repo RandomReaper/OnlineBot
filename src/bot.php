@@ -153,8 +153,9 @@ class PimOnlineBot
             }
         }
 
-        if (! $inserted) {
-            return $inserted;
+        if ($this->doWithoutCron)
+        {
+            $this->udpate_db();
         }
     }
     
