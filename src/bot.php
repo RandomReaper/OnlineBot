@@ -87,7 +87,8 @@ class PimOnlineBot
         $commands_paths = [
             __DIR__ . '/Commands'
         ];
-        $telegram->addCommandsPaths($commands_paths);      
+        $telegram->addCommandsPaths($commands_paths);
+        
         $telegram->enableExternalMySql($pdo);
         
         // Longman\TelegramBot\TelegramLog::initErrorLog(__DIR__ . "/{$bot_username}_error.log");
@@ -206,6 +207,16 @@ class PimOnlineBot
         }
         
         return $row['id'];
+    }
+    
+    public function server_count_for_user($id_user)
+    {
+        $pdo = $this->pdo();
+        $sql = "SELECT count(*) as nr FROM `ob_servers_users` WHERE id_user=:id_user order by id";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':id_user', $id_user);
+        $statement->execute();
+        return $statement->fetch()['nr'];
     }
     
     private function users($id_server)
