@@ -1,3 +1,4 @@
 help - show the full help
 register - add one host with this uid and name
+unregister - remove host with this uid
 list - list your own hosts
