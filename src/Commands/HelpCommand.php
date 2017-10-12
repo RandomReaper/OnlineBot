@@ -22,6 +22,7 @@ class HelpCommand extends UserCommand
             "help" => "this message",
             "list" => "will list your own hosts",
             "register uid name" => "register one host",
+            "unregister uid" => "register one host",
         );
         
         $uid = \Ramsey\Uuid\Uuid::uuid4()->toString();

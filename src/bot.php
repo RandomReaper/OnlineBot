@@ -211,7 +211,7 @@ class PimOnlineBot
     private function users($id_server)
     {
         $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_servers_users` where id_server=:id_server order by id";
+        $sql = "SELECT * FROM `ob_servers_users` WHERE id_server=:id_server order by id";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id_server', $id_server);
         $statement->execute();
@@ -221,7 +221,7 @@ class PimOnlineBot
     public function register($id_user, $id_server, $name)
     {
         $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_servers_users` where id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
+        $sql = "SELECT * FROM `ob_servers_users` WHERE id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id_user', $id_user);
         $statement->bindValue(':id_server', $id_server);
@@ -241,6 +241,31 @@ class PimOnlineBot
             $statement->bindValue(':name', $name);
             
             // Execute the statement and insert our values.
+            return $statement->execute();
+        }
+    }
+    
+    public function unregister($id_user, $id_server)
+    {
+        $pdo = $this->pdo();
+        $sql = "SELECT * FROM `ob_servers_users` WHERE id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
+        $statement = $pdo->prepare($sql);
+        $statement->bindValue(':id_user', $id_user);
+        $statement->bindValue(':id_server', $id_server);
+        $statement->execute();
+        $row = $statement->fetch();
+        
+        if ($statement->rowCount() != 1)
+        {
+            return false;
+        }
+        else
+        {
+            $id = $row['id'];
+            $sql = "DELETE FROM `ob_servers_users` WHERE id=:id";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':id', $id);
+
             return $statement->execute();
         }
     }

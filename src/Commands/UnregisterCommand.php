@@ -5,18 +5,18 @@ namespace Longman\TelegramBot\Commands\UserCommands;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 
-class RegisterCommand extends UserCommand
+class UnregisterCommand extends UserCommand
 {
-    protected $name = 'register';
-    protected $description = 'register host';
-    protected $usage = '/register uid name';
+    protected $name = 'unregister';
+    protected $description = 'unregister host';
+    protected $usage = '/unregister uid';
     protected $version = '1.0.0';
 
     public function execute()
     {
         global $bot;
         $pdo = $bot->pdo();
-        
+                
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
         $params = explode(" ", trim($message->getText(true)));
@@ -26,16 +26,11 @@ class RegisterCommand extends UserCommand
         {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
-                'text'    => "*error:* no parameters, should be `/register uid name`",
+                'text'    => "*error:* no parameters, should be `/unregister uid`",
                 'parse_mode' => 'Markdown'
             ]);
         }
         $uid = $params[0];
-        $name = 'unnamed';
-        if (count($params) > 1)
-        {
-            $name = $params[1];
-        }
 
         $id_server = $bot->id_server($uid);
         
@@ -43,16 +38,12 @@ class RegisterCommand extends UserCommand
         {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
-                'text'    => "*error:* server '$uid' not found",
+                'text'    => "*error:* host '$uid' not found",
                 'parse_mode' => 'Markdown'
             ]);
         }
         
-        echo "here now\n";
-        
-        $success = $bot->register($id_user, $id_server, $name);
-
-        echo "success=$success\n";
+        $success = $bot->unregister($id_user, $id_server);
         
         if (!$success)
         {
@@ -65,7 +56,7 @@ class RegisterCommand extends UserCommand
         
         return Request::sendMessage([
             'chat_id' => $chat_id,
-            'text'    => "*success:* host _{$name}_ (`$uid`) registered",
+            'text'    => "*success:* host`$uid` unregistered",
             'parse_mode' => 'Markdown'
         ]);
     }
