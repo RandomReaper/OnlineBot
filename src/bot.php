@@ -163,7 +163,7 @@ class PimOnlineBot
     {
         $pdo = $this->pdo();
         $time = time();
-        $sql = "SELECT * FROM `ob_online` WHERE (alarm = 0) AND ((now - past) > 120) AND (((now - past) * 1.2) > (:time - now))";
+        $sql = "SELECT * FROM `ob_online` WHERE (alarm = 0) AND ((now - past) > 120) AND (((now - past) * 1.2) < (:time - now))";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':time', time());
         $statement->execute();
