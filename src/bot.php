@@ -146,7 +146,7 @@ class PimOnlineBot
                     
                     Longman\TelegramBot\Request::sendMessage([
                         'chat_id' => $chat_id,
-                        'text'    => "*info:* Host _{$name}_ (`$uid`) is *online*",
+                        'text'    => "*info:* Host _{$name}_ is *online*",
                         'parse_mode' => 'Markdown'
                     ]);
                 }
@@ -185,7 +185,7 @@ class PimOnlineBot
                                 
                 Longman\TelegramBot\Request::sendMessage([
                     'chat_id' => $chat_id,
-                    'text'    => "*error:* Host _{$name}_ (`$uid`) is *offline*",
+                    'text'    => "*error:* Host _{$name}_ is *offline*",
                     'parse_mode' => 'Markdown'
                 ]);
             }
