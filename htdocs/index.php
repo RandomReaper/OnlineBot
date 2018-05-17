@@ -69,6 +69,16 @@ $html =<<<EOT
 <!DOCTYPE html>
 <html>
 <head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<meta name="google-site-verification" content="JzxEzqkYg7kk74ZMjq4v-4NLSY6GboR2MyJNl8O4xOs" />
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-119405595-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-119405595-1');
+</script>
 <style>
 body
 {
