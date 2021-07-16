@@ -3,3 +3,4 @@ composer.phar
 config/config.php
 .settings/
 *.log
+composer.lock

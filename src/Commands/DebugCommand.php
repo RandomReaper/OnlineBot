@@ -3,6 +3,7 @@
 namespace Longman\TelegramBot\Commands\UserCommands;
 
 use Longman\TelegramBot\Commands\UserCommand;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Request;
 
 class DebugCommand extends UserCommand
@@ -12,11 +13,11 @@ class DebugCommand extends UserCommand
     protected $usage = '/debug';
     protected $version = '1.0.0';
 
-    public function execute()
+    public function execute() : ServerResponse
     {
         global $bot;
         $pdo = $bot->pdo();
-        
+
         $message = $this->getMessage();
 
         $chat_id = $message->getChat()->getId();
@@ -32,7 +33,7 @@ class DebugCommand extends UserCommand
             $duration = $row['now'] - $row['past'];
             $text[] = $row['id'].' '.$row['uid'] .' '.$duration . "seconds\n";
         }
-                
+
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text' => implode(PHP_EOL, $text),

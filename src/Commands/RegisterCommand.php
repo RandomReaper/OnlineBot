@@ -3,6 +3,7 @@
 namespace Longman\TelegramBot\Commands\UserCommands;
 
 use Longman\TelegramBot\Commands\UserCommand;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Request;
 
 class RegisterCommand extends UserCommand
@@ -12,16 +13,16 @@ class RegisterCommand extends UserCommand
     protected $usage = '/register uid name';
     protected $version = '1.0.0';
 
-    public function execute()
+    public function execute() : ServerResponse
     {
         global $bot;
         $pdo = $bot->pdo();
-        
+
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
         $params = explode(" ", trim($message->getText(true)));
         $id_user = $message->getFrom()->getId();
-        
+
         if (count($params) < 1 || empty($params[0]))
         {
             return Request::sendMessage([
@@ -38,7 +39,7 @@ class RegisterCommand extends UserCommand
         }
 
         $id_server = $bot->id_server($uid);
-        
+
         if (!$id_server)
         {
             return Request::sendMessage([
@@ -47,13 +48,13 @@ class RegisterCommand extends UserCommand
                 'parse_mode' => 'Markdown'
             ]);
         }
-        
+
         echo "here now\n";
-        
+
         $success = $bot->register($id_user, $id_server, $name);
 
         echo "success=$success\n";
-        
+
         if (!$success)
         {
             return Request::sendMessage([
@@ -62,7 +63,7 @@ class RegisterCommand extends UserCommand
                 'parse_mode' => 'Markdown'
             ]);
         }
-        
+
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text'    => "*success:* host _{$name}_ (`$uid`) registered",

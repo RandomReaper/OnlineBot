@@ -3,6 +3,7 @@
 namespace Longman\TelegramBot\Commands\UserCommands;
 
 use Longman\TelegramBot\Commands\UserCommand;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Request;
 
 class ListCommand extends UserCommand
@@ -12,22 +13,22 @@ class ListCommand extends UserCommand
     protected $usage = '/list';                    // Usage of your command
     protected $version = '1.0.0';                  // Version of your command
 
-    public function execute()
+    public function execute() : ServerResponse
     {
         global $bot;
         $pdo = $bot->pdo();
-        
+
         $message = $this->getMessage();            // Get Message object
 
         $chat_id = $message->getChat()->getId();   // Get the current Chat ID
         $id_user = $message->getFrom()->getId();
-        
+
         $text = [];
         $sql = "SELECT * FROM ob_online LEFT JOIN ob_servers_users ON ob_servers_users.id_server = ob_online.id WHERE ob_servers_users.id_user = :id_user";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id_user', $id_user);
         $statement->execute();
-        
+
         if ($statement->rowCount() == 0)
         {
             $text[] = "no registration";
@@ -51,7 +52,7 @@ class ListCommand extends UserCommand
                 }
             }
         }
-   
+
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text' => implode(PHP_EOL, $text),

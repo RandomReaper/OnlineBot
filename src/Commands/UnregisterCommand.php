@@ -3,6 +3,7 @@
 namespace Longman\TelegramBot\Commands\UserCommands;
 
 use Longman\TelegramBot\Commands\UserCommand;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Request;
 
 class UnregisterCommand extends UserCommand
@@ -12,16 +13,16 @@ class UnregisterCommand extends UserCommand
     protected $usage = '/unregister uid';
     protected $version = '1.0.0';
 
-    public function execute()
+    public function execute() : ServerResponse
     {
         global $bot;
         $pdo = $bot->pdo();
-                
+
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
         $params = explode(" ", trim($message->getText(true)));
         $id_user = $message->getFrom()->getId();
-        
+
         if (count($params) < 1 || empty($params[0]))
         {
             return Request::sendMessage([
@@ -33,7 +34,7 @@ class UnregisterCommand extends UserCommand
         $uid = $params[0];
 
         $id_server = $bot->id_server($uid);
-        
+
         if (!$id_server)
         {
             return Request::sendMessage([
@@ -42,9 +43,9 @@ class UnregisterCommand extends UserCommand
                 'parse_mode' => 'Markdown'
             ]);
         }
-        
+
         $success = $bot->unregister($id_user, $id_server);
-        
+
         if (!$success)
         {
             return Request::sendMessage([
@@ -53,7 +54,7 @@ class UnregisterCommand extends UserCommand
                 'parse_mode' => 'Markdown'
             ]);
         }
-        
+
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text'    => "*success:* host`$uid` unregistered",

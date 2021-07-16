@@ -8,15 +8,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Longman\TelegramBot\Commands\SystemCommands;
+ namespace Longman\TelegramBot\Commands\UserCommands;
 
-use Longman\TelegramBot\Commands\SystemCommand;
-use Longman\TelegramBot\Request;
+ use Longman\TelegramBot\Commands\UserCommand;
+ use Longman\TelegramBot\Entities\ServerResponse;
+ use Longman\TelegramBot\Request;
 
 /**
  * Start command
  */
-class StartCommand extends SystemCommand
+class StartCommand extends UserCommand
 {
     /**
      * @var string
@@ -41,10 +42,10 @@ class StartCommand extends SystemCommand
     /**
      * Command execute method
      *
-     * @return mixed
+     * @return ServerResponse
      * @throws \Longman\TelegramBot\Exception\TelegramException
      */
-    public function execute()
+    public function execute() : ServerResponse
     {
         global $bot;
         $pdo = $bot->pdo();
@@ -52,9 +53,9 @@ class StartCommand extends SystemCommand
         $chat_id = $message->getChat()->getId();
         $id_user = $message->getFrom()->getId();
         $username = $message->getFrom()->getFirstName();
-        
+
         $host_count = $bot->server_count_for_user($id_user);
-        
+
         $text = [];
         if ($host_count)
         {
@@ -67,7 +68,7 @@ class StartCommand extends SystemCommand
                         " I can alert you when one of your host is _down_.";
             $text[] = "Type `/help` if you want to know how it works.";
         }
-        
+
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text' => implode(PHP_EOL, $text),

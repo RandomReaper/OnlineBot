@@ -3,6 +3,7 @@
 namespace Longman\TelegramBot\Commands\UserCommands;
 
 use Longman\TelegramBot\Commands\UserCommand;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Request;
 
 class HelloCommand extends UserCommand
@@ -12,7 +13,7 @@ class HelloCommand extends UserCommand
     protected $usage = '/hello';                    // Usage of your command
     protected $version = '1.0.0';                  // Version of your command
 
-    public function execute()
+    public function execute() : ServerResponse
     {
         $message = $this->getMessage();            // Get Message object
 
