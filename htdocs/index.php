@@ -79,7 +79,10 @@ $html =<<<EOT
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'UA-119405595-1');
+  gtag('config', 'UA-119405595-1', {
+    cookie_domain: 'pimonlinebot.pignat.org',
+    cookie_flags: 'SameSite=None;Secure',
+  });
 </script>
 <style>
 body
