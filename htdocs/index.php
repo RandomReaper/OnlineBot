@@ -97,7 +97,7 @@ Talk to the <a href="https://telegram.me/PimOnlineBot">bot</a>, then ask for <b>
 <h2>Host side</h2>
 The current help is only on the bot side.
 <h2>License and sources</h2>
-© 2017 Marc Pignat, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPL v3</a>, sources on <a href="https://github.com/RandomReaper/OnlineBot">github</a>.
+© 2017-2021 Marc Pignat, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPL v3</a>, sources on <a href="https://github.com/RandomReaper/OnlineBot">github</a>.
 </body>
 </html>
 EOT;
