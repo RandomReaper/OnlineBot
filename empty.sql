@@ -1,9 +1,9 @@
 CREATE TABLE `ob_online` (
  `id` bigint NOT NULL AUTO_INCREMENT,
  `uid` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
- `now` int(11) NOT NULL,
- `past` int(11) NOT NULL,
- `alarm` int(11) NOT NULL,
+ `now` bigint NOT NULL,
+ `past` bigint NOT NULL,
+ `alarm` bigint NOT NULL,
  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
