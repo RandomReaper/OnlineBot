@@ -71,6 +71,12 @@ class PimOnlineBot
         return $this->pdo;
     }
     
+    private function is_valid_uuid($uuid)
+    {
+        $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
+        return preg_match($pattern, $uuid) === 1;
+    }
+    
     private function init_db($mysql_credentials)
     {
         $dsn = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
@@ -194,6 +200,11 @@ class PimOnlineBot
     
     public function id_server($uid)
     {
+        if (!$this->is_valid_uuid($uid))
+        {
+            echo "Invalid UUID format rejected: " . $uid;
+            return -1;
+        }
         $pdo = $this->pdo();
         $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
         $statement = $pdo->prepare($sql);
