@@ -111,6 +111,11 @@ class PimOnlineBot
     
     public function online($uid)
     {
+        if (!$this->is_valid_uuid($uid))
+        {
+            echo "Invalid UUID format rejected: " . $uid;
+            return;
+        }
         $pdo = $this->pdo();
         $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
         $statement = $pdo->prepare($sql);
@@ -211,11 +216,6 @@ class PimOnlineBot
     
     public function id_server($uid)
     {
-        if (!$this->is_valid_uuid($uid))
-        {
-            echo "Invalid UUID format rejected: " . $uid;
-            return -1;
-        }
         $pdo = $this->pdo();
         $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
         $statement = $pdo->prepare($sql);

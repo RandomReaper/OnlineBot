@@ -47,14 +47,6 @@ class RegisterCommand extends UserCommand
                 'text'    => "*error:* server '$uid' not found",
                 'parse_mode' => 'Markdown'
             ]);
-        } 
-        else if ($id_server == -1)
-        {
-            return Request::sendMessage([
-                'chat_id' => $chat_id,
-                'text'    => "*error:* '$uid' is not in a valid format.",
-                'parse_mode' => 'Markdown'
-            ]);
         }
 
         echo "here now\n";
