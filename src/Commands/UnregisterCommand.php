@@ -50,7 +50,7 @@ class UnregisterCommand extends UserCommand
         {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
-                'text'    => "*error:* register host '$uid' failed",
+                'text'    => "*error:* unregister host '$uid' failed",
                 'parse_mode' => 'Markdown'
             ]);
         }
