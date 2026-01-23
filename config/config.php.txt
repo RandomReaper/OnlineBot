@@ -4,6 +4,9 @@ $bot_api_key    = 'your_key';
 $bot_username   = 'OnlineBot';
 $doWithoutCron  = true;
 $base_url       = '';
+$admins_id      = [
+    0123456789,
+];
 
 $mysql_credentials = [
     'host'     => 'localhost',
