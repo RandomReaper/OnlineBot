@@ -12,7 +12,7 @@ class PimOnlineBot
      * @var PDO
      */
     private $pdo;
-    
+
     /**
      * total telegram interface
      * @var Longman\TelegramBot\Telegram telegram object
@@ -31,13 +31,13 @@ class PimOnlineBot
      * @var bool
      */
     private $doWithoutCron;
-    
+
     /**
      * Base url, used for the help
      * @var string
      */
     private $base_url;
-    
+
     /**
      * Minimum interval in seconds before updating the database for an online host.
      * @var int
@@ -54,19 +54,19 @@ class PimOnlineBot
         global $bot_username;
         global $doWithoutCron;
         global $base_url;
-        
+
         $this->pdo = $this->init_db($mysql_credentials);
         $this->telegram = $this->init_telegram($this->pdo, $bot_api_key, $bot_username);
         $this->isHook = $isHook;
         $this->doWithoutCron = $doWithoutCron;
         $this->base_url = $base_url;
     }
-    
+
     public function base_url()
     {
         return $this->base_url;
     }
-    
+
     public function telegram()
     {
         return $this->telegram;
@@ -76,13 +76,13 @@ class PimOnlineBot
     {
         return $this->pdo;
     }
-    
+
     private function is_valid_uuid($uuid)
     {
         $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
         return preg_match($pattern, $uuid) === 1;
     }
-    
+
     private function init_db($mysql_credentials)
     {
         $dsn = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
@@ -91,24 +91,24 @@ class PimOnlineBot
         ];
         return new PDO($dsn, $mysql_credentials['user'], $mysql_credentials['password'], $options);
     }
-    
+
     private function init_telegram($pdo, $bot_api_key, $bot_username)
-    {          
+    {
         $telegram = new Longman\TelegramBot\Telegram($bot_api_key, $bot_username);
-        
+
         $commands_paths = [
             __DIR__ . '/Commands'
         ];
         $telegram->addCommandsPaths($commands_paths);
-        
+
         $telegram->enableExternalMySql($pdo);
-        
+
         // Longman\TelegramBot\TelegramLog::initErrorLog(__DIR__ . "/{$bot_username}_error.log");
         // Longman\TelegramBot\TelegramLog::initDebugLog(__DIR__ . "/{$bot_username}_debug.log");
         // Longman\TelegramBot\TelegramLog::initUpdateLog(__DIR__ . "/{$bot_username}_update.log");
         return $telegram;
     }
-    
+
     public function online($uid)
     {
         if (!$this->is_valid_uuid($uid))
@@ -126,10 +126,10 @@ class PimOnlineBot
             $statement->bindValue(':uid', $uid);
             $statement->execute();
             $row = $statement->fetch();
-            
+
             $telegram = $this->telegram();
             $inserted = false;
-            
+
             if ($statement->rowCount() == 0)
             {
                 $past = 0;
@@ -139,7 +139,7 @@ class PimOnlineBot
                 $statement->bindValue(':now', time());
                 $statement->bindValue(':past', $past);
                 $statement->bindValue(':alarm', 0);
-                
+
                 // Execute the statement and insert our values.
                 $inserted = $statement->execute();
             }
@@ -152,9 +152,9 @@ class PimOnlineBot
 
                 if (!$alarm && ($currentTime - $past) < self::MIN_UPDATE_INTERVAL) {
                     $this->pdo->rollBack();
-                    return; 
+                    return;
                 }
-                
+
                 $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
                 $statement = $pdo->prepare($sql);
                 $statement->bindValue(':id', $id);
@@ -162,7 +162,7 @@ class PimOnlineBot
                 $statement->bindValue(':past', $past);
                 $statement->bindValue(':alarm', 0);
                 $inserted = $statement->execute();
-                
+
                 if ($alarm)
                 {
                     $users = $this->users($id);
@@ -170,7 +170,7 @@ class PimOnlineBot
                     {
                         $chat_id = $r['id_user'];
                         $name = $r['name'];
-                        
+
                         Longman\TelegramBot\Request::sendMessage([
                             'chat_id' => $chat_id,
                             'text'    => "*info:* Host _{$name}_ is *online*",
@@ -182,15 +182,16 @@ class PimOnlineBot
 
             $this->pdo->commit();
 
-            if ($this->doWithoutCron)
-            {
-                $this->udpate_db();
-            }
         } catch (Exception $e) {
             $this->pdo->rollBack();
         }
+
+        if ($this->doWithoutCron)
+        {
+            $this->udpate_db();
+        }
     }
-    
+
     public function udpate_db()
     {
         try {
@@ -211,13 +212,13 @@ class PimOnlineBot
                 $s->bindValue(':id', $id);
                 $s->bindValue(':alarm', time());
                 $s->execute();
-                
+
                 $users = $this->users($id);
                 while ($r = $users->fetch())
                 {
                     $chat_id = $r['id_user'];
                     $name = $r['name'];
-                                    
+
                     Longman\TelegramBot\Request::sendMessage([
                         'chat_id' => $chat_id,
                         'text'    => "*error:* Host _{$name}_ is *offline*",
@@ -231,7 +232,7 @@ class PimOnlineBot
             $this->pdo->rollBack();
         }
     }
-    
+
     public function id_server($uid)
     {
         $pdo = $this->pdo();
@@ -240,15 +241,15 @@ class PimOnlineBot
         $statement->bindValue(':uid', $uid);
         $statement->execute();
         $row = $statement->fetch();
-        
+
         if ($statement->rowCount() == 0)
         {
             return false;
         }
-        
+
         return $row['id'];
     }
-    
+
     public function server_count_for_user($id_user)
     {
         $pdo = $this->pdo();
@@ -258,7 +259,7 @@ class PimOnlineBot
         $statement->execute();
         return $statement->fetch()['nr'];
     }
-    
+
     private function users($id_server)
     {
         $pdo = $this->pdo();
@@ -268,7 +269,7 @@ class PimOnlineBot
         $statement->execute();
         return $statement;
     }
-    
+
     public function register($id_user, $id_server, $name)
     {
         try {
@@ -281,7 +282,7 @@ class PimOnlineBot
             $statement->bindValue(':id_server', $id_server);
             $statement->execute();
             $row = $statement->fetch();
-            
+
             if ($statement->rowCount() != 0)
             {
                 $this->pdo->rollBack();
@@ -294,7 +295,7 @@ class PimOnlineBot
                 $statement->bindValue(':id_user', $id_user);
                 $statement->bindValue(':id_server', $id_server);
                 $statement->bindValue(':name', $name);
-                
+
                 // Execute the statement and insert our values.
                 $res = $statement->execute();
                 $this->pdo->commit();
@@ -305,7 +306,7 @@ class PimOnlineBot
             return false;
         }
     }
-    
+
     public function unregister($id_user, $id_server)
     {
         try {
@@ -318,7 +319,7 @@ class PimOnlineBot
             $statement->bindValue(':id_server', $id_server);
             $statement->execute();
             $row = $statement->fetch();
-            
+
             if ($statement->rowCount() != 1)
             {
                 $this->pdo->rollBack();
@@ -340,7 +341,7 @@ class PimOnlineBot
             return false;
         }
     }
-    
+
     public function server_count()
     {
         $pdo = $this->pdo();
@@ -348,10 +349,10 @@ class PimOnlineBot
         $statement = $pdo->prepare($sql);
         $statement->execute();
         $row = $statement->fetch();
-        
+
         return $row['server_count'];
     }
-    
+
     public function bot()
     {
         try {
@@ -361,7 +362,7 @@ class PimOnlineBot
                 $server_response = $telegram->handle();
             } else {
                 $server_response = $telegram->handleGetUpdates();
-                
+
                 if ($server_response->isOk()) {
                     $update_count = count($server_response->getResult());
                     echo date('Y-m-d H:i:s', time()) . ' - Processed ' . $update_count . ' updates' . PHP_EOL;
@@ -370,13 +371,13 @@ class PimOnlineBot
                     echo $server_response->printError();
                 }
             }
-            
+
         } catch (Longman\TelegramBot\Exception\TelegramException $e) {
             // Silence is golden!
             // log telegram errors
             echo $e->getMessage();
         }
-        
+
         if ($this->doWithoutCron)
         {
             $this->udpate_db();
