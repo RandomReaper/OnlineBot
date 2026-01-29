@@ -42,7 +42,7 @@ class PimOnlineBot
      * Minimum interval in seconds before updating the database for an online host.
      * @var int
      */
-    const MIN_UPDATE_INTERVAL = 30;
+    const MIN_UPDATE_INTERVAL = 120;
 
     /**
      * Init a PimOnlineBot
