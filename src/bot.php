@@ -39,6 +39,12 @@ class PimOnlineBot
     private $base_url;
     
     /**
+     * Minimum interval in seconds before updating the database for an online host.
+     * @var int
+     */
+    const MIN_UPDATE_INTERVAL = 30;
+
+    /**
      * Init a PimOnlineBot
      */
     public function __construct($isHook)
@@ -71,6 +77,12 @@ class PimOnlineBot
         return $this->pdo;
     }
     
+    private function is_valid_uuid($uuid)
+    {
+        $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
+        return preg_match($pattern, $uuid) === 1;
+    }
+    
     private function init_db($mysql_credentials)
     {
         $dsn = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
@@ -99,103 +111,131 @@ class PimOnlineBot
     
     public function online($uid)
     {
-        $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
-        $statement = $pdo->prepare($sql);
-        $statement->bindValue(':uid', $uid);
-        $statement->execute();
-        $row = $statement->fetch();
-        
-        $telegram = $this->telegram();
-        $inserted = false;
-        
-        if ($statement->rowCount() == 0)
+        if (!$this->is_valid_uuid($uid))
         {
-            $past = 0;
-            $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
-            $statement = $pdo->prepare($sql);
-            $statement->bindValue(':uid', $uid);
-            $statement->bindValue(':now', time());
-            $statement->bindValue(':past', $past);
-            $statement->bindValue(':alarm', 0);
-            
-            // Execute the statement and insert our values.
-            $inserted = $statement->execute();
-        }
-        else
-        {
-            $id = $row['id'];
-            $past = $row['now'];
-            $alarm = $row['alarm'];
-            
-            $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
-            $statement = $pdo->prepare($sql);
-            $statement->bindValue(':id', $id);
-            $statement->bindValue(':now', time());
-            $statement->bindValue(':past', $past);
-            $statement->bindValue(':alarm', 0);
-            $inserted = $statement->execute();
-            
-            if ($alarm)
-            {
-                $users = $this->users($id);
-                while ($r = $users->fetch())
-                {
-                    $chat_id = $r['id_user'];
-                    $name = $r['name'];
-                    
-                    Longman\TelegramBot\Request::sendMessage([
-                        'chat_id' => $chat_id,
-                        'text'    => "*info:* Host _{$name}_ is *online*",
-                        'parse_mode' => 'Markdown'
-                    ]);
-                }
-            }
+            echo "Invalid UUID format rejected: " . $uid;
+            return;
         }
 
-        if ($this->doWithoutCron)
-        {
-            $this->udpate_db();
+        try {
+            $this->pdo->beginTransaction();
+
+            $pdo = $this->pdo();
+            $sql = "SELECT * FROM `ob_online` WHERE uid=:uid ORDER BY id DESC LIMIT 1 FOR UPDATE";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':uid', $uid);
+            $statement->execute();
+            $row = $statement->fetch();
+            
+            $telegram = $this->telegram();
+            $inserted = false;
+            
+            if ($statement->rowCount() == 0)
+            {
+                $past = 0;
+                $sql = "INSERT INTO `ob_online` (`uid`, `now`, `past`, `alarm`) VALUES (:uid, :now, :past, :alarm)";
+                $statement = $pdo->prepare($sql);
+                $statement->bindValue(':uid', $uid);
+                $statement->bindValue(':now', time());
+                $statement->bindValue(':past', $past);
+                $statement->bindValue(':alarm', 0);
+                
+                // Execute the statement and insert our values.
+                $inserted = $statement->execute();
+            }
+            else
+            {
+                $id = $row['id'];
+                $past = $row['now'];
+                $alarm = $row['alarm'];
+                $currentTime = time();
+
+                if (!$alarm && ($currentTime - $past) < self::MIN_UPDATE_INTERVAL) {
+                    $this->pdo->rollBack();
+                    return; 
+                }
+                
+                $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
+                $statement = $pdo->prepare($sql);
+                $statement->bindValue(':id', $id);
+                $statement->bindValue(':now', time());
+                $statement->bindValue(':past', $past);
+                $statement->bindValue(':alarm', 0);
+                $inserted = $statement->execute();
+                
+                if ($alarm)
+                {
+                    $users = $this->users($id);
+                    while ($r = $users->fetch())
+                    {
+                        $chat_id = $r['id_user'];
+                        $name = $r['name'];
+                        
+                        Longman\TelegramBot\Request::sendMessage([
+                            'chat_id' => $chat_id,
+                            'text'    => "*info:* Host _{$name}_ is *online*",
+                            'parse_mode' => 'Markdown'
+                        ]);
+                    }
+                }
+            }
+
+            $this->pdo->commit();
+
+            if ($this->doWithoutCron)
+            {
+                $this->udpate_db();
+            }
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
         }
     }
     
     public function udpate_db()
     {
-        $pdo = $this->pdo();
-        $time = time();
-        $sql = "SELECT * FROM `ob_online` WHERE (alarm = 0) AND ((now - past) > 120) AND (((now - past) * 2.4) < (:time - now))";
-        $statement = $pdo->prepare($sql);
-        $statement->bindValue(':time', time());
-        $statement->execute();
-        while ($row = $statement->fetch())
-        {
-            $id = $row['id'];
-            $uid = $row['uid'];
-            $sql = "UPDATE `ob_online` SET `alarm` = :alarm WHERE `id` = :id";
-            $s = $pdo->prepare($sql);
-            $s->bindValue(':id', $id);
-            $s->bindValue(':alarm', time());
-            $s->execute();
-            
-            $users = $this->users($id);
-            while ($r = $users->fetch())
+        try {
+            $this->pdo->beginTransaction();
+
+            $pdo = $this->pdo();
+            $time = time();
+            $sql = "SELECT * FROM `ob_online` WHERE (alarm = 0) AND ((now - past) > 120) AND (((now - past) * 2.4) < (:time - now)) FOR UPDATE";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':time', time());
+            $statement->execute();
+            while ($row = $statement->fetch())
             {
-                $chat_id = $r['id_user'];
-                $name = $r['name'];
-                                
-                Longman\TelegramBot\Request::sendMessage([
-                    'chat_id' => $chat_id,
-                    'text'    => "*error:* Host _{$name}_ is *offline*",
-                    'parse_mode' => 'Markdown'
-                ]);
+                $id = $row['id'];
+                $uid = $row['uid'];
+                $sql = "UPDATE `ob_online` SET `alarm` = :alarm WHERE `id` = :id";
+                $s = $pdo->prepare($sql);
+                $s->bindValue(':id', $id);
+                $s->bindValue(':alarm', time());
+                $s->execute();
+                
+                $users = $this->users($id);
+                while ($r = $users->fetch())
+                {
+                    $chat_id = $r['id_user'];
+                    $name = $r['name'];
+                                    
+                    Longman\TelegramBot\Request::sendMessage([
+                        'chat_id' => $chat_id,
+                        'text'    => "*error:* Host _{$name}_ is *offline*",
+                        'parse_mode' => 'Markdown'
+                    ]);
+                }
             }
+
+            $this->pdo->commit();
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
         }
     }
     
     public function id_server($uid)
     {
         $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_online` where uid=:uid order by id DESC limit 1";
+        $sql = "SELECT * FROM `ob_online` WHERE uid=:uid ORDER BY id DESC LIMIT 1";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':uid', $uid);
         $statement->execute();
@@ -212,7 +252,7 @@ class PimOnlineBot
     public function server_count_for_user($id_user)
     {
         $pdo = $this->pdo();
-        $sql = "SELECT count(*) as nr FROM `ob_servers_users` WHERE id_user=:id_user order by id";
+        $sql = "SELECT count(*) as nr FROM `ob_servers_users` WHERE id_user=:id_user ORDER BY id";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id_user', $id_user);
         $statement->execute();
@@ -222,7 +262,7 @@ class PimOnlineBot
     private function users($id_server)
     {
         $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_servers_users` WHERE id_server=:id_server order by id";
+        $sql = "SELECT * FROM `ob_servers_users` WHERE id_server=:id_server ORDER BY id";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':id_server', $id_server);
         $statement->execute();
@@ -231,53 +271,73 @@ class PimOnlineBot
     
     public function register($id_user, $id_server, $name)
     {
-        $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_servers_users` WHERE id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
-        $statement = $pdo->prepare($sql);
-        $statement->bindValue(':id_user', $id_user);
-        $statement->bindValue(':id_server', $id_server);
-        $statement->execute();
-        $row = $statement->fetch();
-        
-        if ($statement->rowCount() != 0)
-        {
-            return true;
-        }
-        else
-        {
-            $sql = "INSERT INTO `ob_servers_users` (`id_user`, `id_server`, `name`) VALUES (:id_user, :id_server, :name)";
+        try {
+            $this->pdo->beginTransaction();
+
+            $pdo = $this->pdo();
+            $sql = "SELECT * FROM `ob_servers_users` WHERE id_user=:id_user AND id_server=:id_server ORDER BY id DESC LIMIT 1 FOR UPDATE";
             $statement = $pdo->prepare($sql);
             $statement->bindValue(':id_user', $id_user);
             $statement->bindValue(':id_server', $id_server);
-            $statement->bindValue(':name', $name);
+            $statement->execute();
+            $row = $statement->fetch();
             
-            // Execute the statement and insert our values.
-            return $statement->execute();
+            if ($statement->rowCount() != 0)
+            {
+                $this->pdo->rollBack();
+                return true;
+            }
+            else
+            {
+                $sql = "INSERT INTO `ob_servers_users` (`id_user`, `id_server`, `name`) VALUES (:id_user, :id_server, :name)";
+                $statement = $pdo->prepare($sql);
+                $statement->bindValue(':id_user', $id_user);
+                $statement->bindValue(':id_server', $id_server);
+                $statement->bindValue(':name', $name);
+                
+                // Execute the statement and insert our values.
+                $res = $statement->execute();
+                $this->pdo->commit();
+                return $res;
+            }
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            return false;
         }
     }
     
     public function unregister($id_user, $id_server)
     {
-        $pdo = $this->pdo();
-        $sql = "SELECT * FROM `ob_servers_users` WHERE id_user=:id_user AND id_server=:id_server order by id DESC limit 1";
-        $statement = $pdo->prepare($sql);
-        $statement->bindValue(':id_user', $id_user);
-        $statement->bindValue(':id_server', $id_server);
-        $statement->execute();
-        $row = $statement->fetch();
-        
-        if ($statement->rowCount() != 1)
-        {
-            return false;
-        }
-        else
-        {
-            $id = $row['id'];
-            $sql = "DELETE FROM `ob_servers_users` WHERE id=:id";
-            $statement = $pdo->prepare($sql);
-            $statement->bindValue(':id', $id);
+        try {
+            $this->pdo->beginTransaction();
 
-            return $statement->execute();
+            $pdo = $this->pdo();
+            $sql = "SELECT * FROM `ob_servers_users` WHERE id_user=:id_user AND id_server=:id_server ORDER BY id DESC LIMIT 1 FOR UPDATE";
+            $statement = $pdo->prepare($sql);
+            $statement->bindValue(':id_user', $id_user);
+            $statement->bindValue(':id_server', $id_server);
+            $statement->execute();
+            $row = $statement->fetch();
+            
+            if ($statement->rowCount() != 1)
+            {
+                $this->pdo->rollBack();
+                return false;
+            }
+            else
+            {
+                $id = $row['id'];
+                $sql = "DELETE FROM `ob_servers_users` WHERE id=:id";
+                $statement = $pdo->prepare($sql);
+                $statement->bindValue(':id', $id);
+
+                $res = $statement->execute();
+                $this->pdo->commit();
+                return $res;
+            }
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            return false;
         }
     }
     

@@ -1,14 +1,25 @@
 <?php
-
+# The bot key and username, ask BotFather at https://telegram.me/BotFather
 $bot_api_key    = 'your_key';
 $bot_username   = 'OnlineBot';
-$doWithoutCron  = true;
+
+# call "index.sh cron" every minute or set doWihoutCron to true
+# this will be expensive
+$doWithoutCron  = false;
+
+# URL for the service (also used while generating help cron example)
 $base_url       = '';
 
+# Admins can be defined here
+$admins_id      = array(
+    0123456789,
+);
+
+# MySQL credentials
 $mysql_credentials = [
     'host'     => 'localhost',
+    'database' => 'your_db',
     'user'     => 'your_user',
     'password' => 'your_pwd',
-    'database' => 'your_db',
 ];
 
