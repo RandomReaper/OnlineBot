@@ -48,7 +48,7 @@ You can list your own hosts using the `/list` command, it should say something l
 Host _my-pretty-host-name_ (`$uid`) is *online*. Update interval : 3600 seconds, age : 150 seconds
 
 
-** Please don't update your status more than once every 5 minutes **
+Please don't update your status more than once every 5 minutes.
 
 
 EOT;
