@@ -34,7 +34,6 @@ The host will tell _me_ it is online by doing a request at regular interval, for
 ```
 $min * * * * wget -q $base_url/index.php?uid=$uid -O /dev/null
 ```
-
 The host will be identified by it's _uid_. This _uid_ must be *unique*, and I just generated `$uid` for your new host, but
 `uuidgen` (the command line) can also be used.
 
@@ -47,6 +46,10 @@ Since _uid_ is not really human friendly, feel free to tell _me_ your host name.
 You can list your own hosts using the `/list` command, it should say something like:
 
 Host _my-pretty-host-name_ (`$uid`) is *online*. Update interval : 3600 seconds, age : 150 seconds
+
+
+** Please don't update your status more than once every 5 minutes **
+
 
 EOT;
 
