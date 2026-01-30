@@ -52,7 +52,7 @@ if (isset($_REQUEST['uid']))
 
       default:
         http_response_code(400);
-
+        print("unknown error");
       break;
     }
 }
