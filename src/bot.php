@@ -200,7 +200,7 @@ class PimOnlineBot
 
             $pdo = $this->pdo();
             $time = time();
-            $sql = "SELECT * FROM `ob_online` WHERE (alarm = 0) AND ((now - past) > 120) AND (((now - past) * 2.4) < (:time - now)) FOR UPDATE";
+            $sql = "SELECT * FROM `ob_online` WHERE (alarm = 0) AND ((now - past) >= :MIN_UPDATE_INTERVAL) AND (((now - past) * 2.4) < (:time - now)) FOR UPDATE";
             $statement = $pdo->prepare($sql);
             $statement->bindValue(':time', time());
             $statement->execute();
