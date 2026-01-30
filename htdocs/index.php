@@ -39,10 +39,20 @@ if (isset($_REQUEST['uid']))
       case 0:
         http_response_code(200);
       break;
+
       case 1:
+        http_response_code(400);
+        print("invalid uuid");
+      break;
+
       case 2:
+        http_response_code(400);
+        print("too soon");
+      break;
+
       default:
         http_response_code(400);
+
       break;
     }
 }

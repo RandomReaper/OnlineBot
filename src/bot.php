@@ -113,7 +113,6 @@ class PimOnlineBot
     {
         if (!$this->is_valid_uuid($uid))
         {
-            echo "Invalid UUID format rejected: " . $uid;
             return 1;
         }
 
