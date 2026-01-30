@@ -114,7 +114,7 @@ class PimOnlineBot
         if (!$this->is_valid_uuid($uid))
         {
             echo "Invalid UUID format rejected: " . $uid;
-            return;
+            return 1;
         }
 
         try {
@@ -152,7 +152,7 @@ class PimOnlineBot
 
                 if (!$alarm && ($currentTime - $past) < self::MIN_UPDATE_INTERVAL) {
                     $this->pdo->rollBack();
-                    return;
+                    return 2;
                 }
 
                 $sql = "UPDATE `ob_online` SET `now` = :now, `past` = :past, `alarm` = :alarm WHERE `id` = :id";
@@ -190,6 +190,8 @@ class PimOnlineBot
         {
             $this->udpate_db();
         }
+
+        return 0;
     }
 
     public function udpate_db()

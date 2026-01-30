@@ -33,7 +33,18 @@ if (isset($_REQUEST['uid']))
         header('Cache-Control: max-age=0');
     }
 
-    $bot->online($_REQUEST['uid']);
+    $ret = $bot->online($_REQUEST['uid']);
+
+    switch ($ret) {
+      case 0:
+        http_response_code(200);
+      break;
+      case 1:
+      case 2:
+      default:
+        http_response_code(400);
+      break;
+    }
 }
 else if (isset($_REQUEST['cron']))
 {
