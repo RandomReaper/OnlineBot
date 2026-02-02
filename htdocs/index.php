@@ -169,10 +169,10 @@ font-family:sans
 </head>
 <body>
 
-<h1>Welcome to PimOnlineBot</h1>
+<h1>Welcome to $bot_username's</h1>
 <p>Receive a telegram when your host is offline.</p>
 <h2>Telegram side</h2>
-Talk to the <a href="https://telegram.me/PimOnlineBot">bot</a>, then ask for <b>/help</b>.
+Talk to the <a href="https://telegram.me/$bot_username">bot</a>, then ask for <b>/help</b>.
 <h2>Host side</h2>
 The current help is only on the bot side.
 <h2>License and sources</h2>
