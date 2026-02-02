@@ -39,12 +39,6 @@ class PimOnlineBot
     private $base_url;
 
     /**
-     * Minimum interval in seconds before updating the database for an online host.
-     * @var int
-     */
-    const MIN_UPDATE_INTERVAL = 120;
-
-    /**
      * Init a PimOnlineBot
      */
     public function __construct($isHook)
@@ -150,7 +144,7 @@ class PimOnlineBot
                 $alarm = $row['alarm'];
                 $currentTime = time();
 
-                if (!$alarm && ($currentTime - $past) < self::MIN_UPDATE_INTERVAL) {
+                if (!$alarm && ($currentTime - $past) < $min_interval) {
                     $this->pdo->rollBack();
                     return 2;
                 }
