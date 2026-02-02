@@ -7,6 +7,9 @@ $bot_username   = 'OnlineBot';
 # this will be expensive
 $doWithoutCron  = false;
 
+# Minimum update interval, in seconds
+$min_interval = 120;
+
 # URL for the service (also used while generating help cron example)
 $base_url       = '';
 
@@ -22,4 +25,3 @@ $mysql_credentials = [
     'user'     => 'your_user',
     'password' => 'your_pwd',
 ];
-
