@@ -32,7 +32,7 @@ I can send you a message when a host is _offline_.
 
 The host will tell _me_ it is online by doing a request at regular interval, for instance using a cron job like this one:
 ```
-$min * * * * wget -q $base_url/index.php?uid=$uid -O /dev/null
+$min * * * * wget -q $base_url?uid=$uid -O /dev/null
 ```
 The host will be identified by it's _uid_. This _uid_ must be *unique*, and I just generated `$uid` for your new host, but
 `uuidgen` (the command line) can also be used.
