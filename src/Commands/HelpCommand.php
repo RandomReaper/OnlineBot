@@ -7,7 +7,6 @@ use Longman\TelegramBot\Request;
 
 class HelpCommand extends UserCommand
 {
-
     protected $name = 'help';
     protected $description = 'help';
     protected $usage = '/help';
@@ -24,7 +23,8 @@ class HelpCommand extends UserCommand
         );
 
         $uid = \Ramsey\Uuid\Uuid::uuid4()->toString();
-        $min = rand(0,59);
+        $min_int = rand(0,4);
+        $min = sprintf("%d-%d/5", $min_int, 55 + $min_int);
         $base_url = $bot->base_url();
         $help_message =<<<EOT
 Hello, my name is *PimOnlineBot*.
