@@ -39,6 +39,13 @@ class PimOnlineBot
     private $base_url;
 
     /**
+     * Minimum update interval in second
+     * @var int
+     */
+    private $min_interval;
+
+
+    /**
      * Init a PimOnlineBot
      */
     public function __construct($isHook)
@@ -55,6 +62,7 @@ class PimOnlineBot
         $this->isHook = $isHook;
         $this->doWithoutCron = $doWithoutCron;
         $this->base_url = $base_url;
+        $this->min_interval = $min_interval;
     }
 
     public function base_url()
