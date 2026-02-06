@@ -59,10 +59,18 @@ if (isset($_REQUEST['uid']))
 else if (isset($_REQUEST['cron']))
 {
     /*
-     * Manual update, generally from cron, but at this time can be forced
-     * through HTTP.
+     * wget -q https://online.oouu.ch?cron=1
+     * only accepted from localhost
      */
-    $bot->udpate_db();
+     $whitelist = array('127.0.0.1', "::1");
+
+     if (in_array($_SERVER['REMOTE_ADDR'], $whitelist)){
+         $bot->udpate_db();
+     }
+     else {
+       http_response_code(400);
+       print("cron");
+     }
 }
 else
 {
@@ -84,7 +92,7 @@ if (!$online)
     echo "server_count = $c\n";
 }
 
-if ($online && !isset($_REQUEST['uid']))
+if ( $online && !isset($_REQUEST['uid']) && !isset($_REQUEST['cron']) )
 {
 $html =<<<EOT
 <!DOCTYPE html>
