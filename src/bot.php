@@ -190,13 +190,13 @@ class PimOnlineBot
 
         if ($this->doWithoutCron)
         {
-            $this->udpate_db();
+            $this->update_db();
         }
 
         return 0;
     }
 
-    public function udpate_db()
+    public function update_db()
     {
         try {
             $this->pdo->beginTransaction();
@@ -384,7 +384,7 @@ class PimOnlineBot
 
         if ($this->doWithoutCron)
         {
-            $this->udpate_db();
+            $this->update_db();
         }
     }
 }

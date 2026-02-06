@@ -65,7 +65,7 @@ else if (isset($_REQUEST['cron']))
      $whitelist = array('127.0.0.1', "::1");
 
      if (in_array($_SERVER['REMOTE_ADDR'], $whitelist)){
-         $bot->udpate_db();
+         $bot->update_db();
      }
      else {
        http_response_code(400);
