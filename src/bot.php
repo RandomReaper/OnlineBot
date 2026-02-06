@@ -152,7 +152,7 @@ class PimOnlineBot
                 $alarm = $row['alarm'];
                 $currentTime = time();
 
-                if (!$alarm && ($currentTime - $past) < $min_interval) {
+                if (!$alarm && ($currentTime - $past) < $this->min_interval) {
                     $this->pdo->rollBack();
                     return 2;
                 }
