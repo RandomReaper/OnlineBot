@@ -40,15 +40,15 @@ class ListCommand extends UserCommand
                 $duration = $row['now'] - $row['past'];
                 $last = time() - $row['now'];
                 $uid = $row['uid'];
-                $name = $row['name'];
+                $hostname = $row['name'];
                 $alarm = $row['alarm'];
                 if ($alarm == 0)
                 {
-                    $text[] = "Host _{$name}_ (`$uid`) is *up*. (update interval : $duration seconds, age : $last seconds).";
+                    $text[] = "Host _{$hostname}_ (`$uid`) is *up*. (update interval : $duration seconds, age : $last seconds).";
                 }
                 else
                 {
-                    $text[] = "Host _{$name}_ (`$uid`) is *down* (last update : $last seconds ago).";
+                    $text[] = "Host _{$hostname}_ (`$uid`) is *down* (last update : $last seconds ago).";
                 }
             }
         }

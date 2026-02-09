@@ -171,11 +171,11 @@ class PimOnlineBot
                     while ($r = $users->fetch())
                     {
                         $chat_id = $r['id_user'];
-                        $name = $r['name'];
+                        $hostname = $r['name'];
 
                         Longman\TelegramBot\Request::sendMessage([
                             'chat_id' => $chat_id,
-                            'text'    => "*info:* Host _{$name}_ is *online*",
+                            'text'    => "*info:* Host _{$hostname}_ is *online*",
                             'parse_mode' => 'Markdown'
                         ]);
                     }
@@ -221,11 +221,11 @@ class PimOnlineBot
                 while ($r = $users->fetch())
                 {
                     $chat_id = $r['id_user'];
-                    $name = $r['name'];
+                    $hostname = $r['name'];
 
                     Longman\TelegramBot\Request::sendMessage([
                         'chat_id' => $chat_id,
-                        'text'    => "*error:* Host _{$name}_ is *offline*",
+                        'text'    => "*error:* Host _{$hostname}_ is *offline*",
                         'parse_mode' => 'Markdown'
                     ]);
                 }
@@ -301,7 +301,7 @@ class PimOnlineBot
         return $statement;
     }
 
-    public function register($id_user, $id_server, $name)
+    public function register($id_user, $id_server, $hostname)
     {
         try {
             $this->pdo->beginTransaction();
@@ -325,7 +325,7 @@ class PimOnlineBot
                 $statement = $pdo->prepare($sql);
                 $statement->bindValue(':id_user', $id_user);
                 $statement->bindValue(':id_server', $id_server);
-                $statement->bindValue(':name', $name);
+                $statement->bindValue(':name', $hostname);
 
                 // Execute the statement and insert our values.
                 $res = $statement->execute();

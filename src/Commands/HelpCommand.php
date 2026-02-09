@@ -18,7 +18,7 @@ class HelpCommand extends UserCommand
         $commands = array(
             "help" => "this message",
             "list" => "will list your own hosts",
-            "register uid name" => "register one host",
+            "register uid hostname" => "register one host",
             "unregister uid" => "register one host",
         );
 

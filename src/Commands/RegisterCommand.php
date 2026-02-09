@@ -10,7 +10,7 @@ class RegisterCommand extends UserCommand
 {
     protected $name = 'register';
     protected $description = 'register host';
-    protected $usage = '/register uid name';
+    protected $usage = '/register uid hostname';
     protected $version = '1.0.0';
 
     public function execute() : ServerResponse
@@ -27,15 +27,24 @@ class RegisterCommand extends UserCommand
         {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
-                'text'    => "*error:* no parameters, should be `/register uid name`",
+                'text'    => "*error:* no parameters, should be `/register uid hostname`",
                 'parse_mode' => 'Markdown'
             ]);
         }
         $uid = $params[0];
-        $name = 'unnamed';
+        $hostname = 'unnamed';
         if (count($params) > 1)
         {
-            $name = $params[1];
+            $hostname = $params[1];
+        }
+
+        if (!preg_match('/^(?=.{1,253}$)([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/', $hostname))
+        {
+            return Request::sendMessage([
+                'chat_id' => $chat_id,
+                'text'    => "*error:* invalid hostname, must be a valid unix hostname (alphanumeric, hyphens, dots)",
+                'parse_mode' => 'Markdown'
+            ]);
         }
 
         $id_server = $bot->id_server($uid);
@@ -51,7 +60,7 @@ class RegisterCommand extends UserCommand
 
         echo "here now\n";
 
-        $success = $bot->register($id_user, $id_server, $name);
+        $success = $bot->register($id_user, $id_server, $hostname);
 
         echo "success=$success\n";
 
@@ -66,7 +75,7 @@ class RegisterCommand extends UserCommand
 
         return Request::sendMessage([
             'chat_id' => $chat_id,
-            'text'    => "*success:* host _{$name}_ (`$uid`) registered",
+            'text'    => "*success:* host _{$hostname}_ (`$uid`) registered",
             'parse_mode' => 'Markdown'
         ]);
     }
