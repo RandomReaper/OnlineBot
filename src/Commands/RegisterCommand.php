@@ -66,11 +66,7 @@ class RegisterCommand extends UserCommand
             ]);
         }
 
-        echo "here now\n";
-
         $success = $bot->register($id_user, $id_server, $hostname);
-
-        echo "success=$success\n";
 
         if (!$success)
         {
