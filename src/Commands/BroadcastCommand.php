@@ -16,14 +16,12 @@ class BroadcastCommand extends UserCommand
 
     public function execute(): ServerResponse
     {
-        require __DIR__ . '/../../config/config.php';
-
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
         $user_id = $message->getFrom()->getId();
         $text = trim($message->getText(true));
 
-        if (!isset($bot->admins_id) || !in_array($user_id, $bot->admins_id)) {
+        if (!isset($bot->admins_id()) || !in_array($user_id, $bot->admins_id())) {
             return Request::sendMessage([
                 'chat_id'    => $chat_id,
                 'text'       => '*Error:* You do not have permission to execute this command.',

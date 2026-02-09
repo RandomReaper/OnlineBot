@@ -87,6 +87,11 @@ class PimOnlineBot
         return $this->pdo;
     }
 
+    public function admins_id()
+    {
+        return $this->admins_id;
+    }
+
     public function is_valid_uuid($uuid)
     {
         $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
