@@ -16,6 +16,7 @@ class BroadcastCommand extends UserCommand
 
     public function execute(): ServerResponse
     {
+        global $bot;
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
         $user_id = $message->getFrom()->getId();
