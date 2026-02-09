@@ -26,7 +26,7 @@ class DebugCommand extends UserCommand
         if (!isset($admins_id) || !in_array($user_id, $admins_id)) {
             return Request::sendMessage([
                 'chat_id'    => $chat_id,
-                'text'       => "*Error:* You do not have permission to execute this command. (your uid=$suer_id)",
+                'text'       => "*Error:* You do not have permission to execute this command. (your uid=$user_id)",
                 'parse_mode' => 'Markdown'
             ]);
         }
