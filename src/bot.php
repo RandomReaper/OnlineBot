@@ -80,7 +80,7 @@ class PimOnlineBot
         return $this->pdo;
     }
 
-    private function is_valid_uuid($uuid)
+    public function is_valid_uuid($uuid)
     {
         $pattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
         return preg_match($pattern, $uuid) === 1;

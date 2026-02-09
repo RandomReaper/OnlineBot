@@ -32,6 +32,14 @@ class RegisterCommand extends UserCommand
             ]);
         }
         $uid = $params[0];
+        if (!$bot->is_valid_uuid($uid))
+        {
+            return Request::sendMessage([
+                'chat_id' => $chat_id,
+                'text'    => "*error:* invalid uid, must be a valid uuid",
+                'parse_mode' => 'Markdown'
+            ]);
+        }
         $hostname = 'unnamed';
         if (count($params) > 1)
         {
