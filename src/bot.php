@@ -44,6 +44,11 @@ class PimOnlineBot
      */
     private $min_interval;
 
+    /**
+     * Admins id
+     * @var long array
+     */
+    private $admins_id;
 
     /**
      * Init a PimOnlineBot
@@ -56,6 +61,7 @@ class PimOnlineBot
         global $min_interval;
         global $doWithoutCron;
         global $base_url;
+        global $admins_id;
 
         $this->pdo = $this->init_db($mysql_credentials);
         $this->telegram = $this->init_telegram($this->pdo, $bot_api_key, $bot_username);
@@ -63,6 +69,7 @@ class PimOnlineBot
         $this->doWithoutCron = $doWithoutCron;
         $this->base_url = $base_url;
         $this->min_interval = $min_interval;
+        $this->admins_id = $admins_id;
     }
 
     public function base_url()

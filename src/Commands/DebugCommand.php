@@ -23,10 +23,10 @@ class DebugCommand extends UserCommand
         $chat_id = $message->getChat()->getId();
         $user_id = $message->getFrom()->getId();
 
-        if (!isset($admins_id) || !in_array($user_id, $admins_id)) {
+        if (!isset($bot->admins_id) || !in_array($user_id, $bot->admins_id)) {
             return Request::sendMessage([
                 'chat_id'    => $chat_id,
-                'text'       => "*Error:* You do not have permission to execute this command. (your uid=$user_id, admins_id=$admins_id)",
+                'text'       => '*Error:* You do not have permission to execute this command.',
                 'parse_mode' => 'Markdown'
             ]);
         }
