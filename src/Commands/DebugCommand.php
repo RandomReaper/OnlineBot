@@ -23,10 +23,19 @@ class DebugCommand extends UserCommand
         $chat_id = $message->getChat()->getId();
         $user_id = $message->getFrom()->getId();
 
+        if (!isset($admins_id) || !in_array($user_id, $admins_id)) {
+            return Request::sendMessage([
+                'chat_id'    => $chat_id,
+                'text'       => '*Error:* You do not have permission to execute this command.',
+                'parse_mode' => 'Markdown'
+            ]);
+        }
+
         $text = [];
         $text[] = "user\_id = *$user_id*";
         $text[] = "chat\_id = *$chat_id*";
-        foreach($pdo->query('SELECT * FROM ob_servers') as $row) {
+
+        foreach($pdo->query('SELECT * FROM ob_servers_users') as $row) {
             $text[] = $row['id'].' '.$row['name'] . "\n";
         }
         foreach($pdo->query('SELECT * FROM ob_online') as $row) {
