@@ -196,7 +196,7 @@ class PimOnlineBot
         return 0;
     }
 
-    public function update_db()
+    public function update_db_alarm()
     {
         try {
             $this->pdo->beginTransaction();
@@ -236,6 +236,33 @@ class PimOnlineBot
             $this->pdo->rollBack();
         }
     }
+
+    public function update_db_cleanup()
+    {
+        try {
+            $this->pdo->beginTransaction();
+
+            $pdo = $this->pdo();
+            $time = time();
+            // Delete machines with no users and no update in the last 30 days
+            $sql = "DELETE FROM `ob_online` WHERE".
+                    "`id` NOT IN (SELECT `id_server` FROM ob_servers_users) AND".
+                    "from_unixtime(now) < now() - interval 30 DAY;";
+            $statement = $pdo->prepare($sql);
+            $statement->execute();
+
+            $this->pdo->commit();
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+        }
+    }
+
+    public function update_db()
+    {
+      $this->update_db_alarm();
+      $this->update_db_cleanup();
+    }
+
 
     public function id_server($uid)
     {
