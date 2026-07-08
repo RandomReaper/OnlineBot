@@ -102,7 +102,7 @@ class PimOnlineBot
     {
         $dsn = 'mysql:host=' . $mysql_credentials['host'] . ';dbname=' . $mysql_credentials['database'];
         $options = [
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES ' . 'utf8mb4'
+            Pdo\Mysql::ATTR_INIT_COMMAND => 'SET NAMES ' . 'utf8mb4'
         ];
         return new PDO($dsn, $mysql_credentials['user'], $mysql_credentials['password'], $options);
     }
